@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"errors"
+	"kenja2/documents"
 	"os"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -38,6 +39,10 @@ func Connet(uri string) (*AtlaSearch, error) {
 		database,
 		collections,
 	}, nil
+}
+
+func (a *AtlaSearch) TextSearch(keywords string, rating documents.Rating) {
+
 }
 
 func (a *AtlaSearch) Close(ctx context.Context) error {

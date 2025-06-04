@@ -18,4 +18,4 @@ require (
 	golang.org/x/text v0.25.0 // indirect
 )
 
-replace kenja2 => ./..
+replace kenja2 => ./../lib
