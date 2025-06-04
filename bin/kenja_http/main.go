@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"kenja2"
-	"kenja2/mongodb"
+	kenja2 "kenja2/lib"
+	"kenja2/lib/mongodb"
 
 	"net/http"
 	"os"

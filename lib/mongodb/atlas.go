@@ -3,7 +3,7 @@ package mongodb
 import (
 	"context"
 	"errors"
-	"kenja2/documents"
+	"kenja2/lib/documents"
 	"os"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"

@@ -2,7 +2,7 @@ package kenja2
 
 import (
 	"context"
-	"kenja2/documents"
+	"kenja2/lib/documents"
 )
 
 type Engine interface {
