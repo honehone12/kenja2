@@ -14,7 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var eNGINE kenja2.Engine
+var __ENGINE kenja2.Engine
 
 func args() uint {
 	port := flag.Uint("port", 8080, "listen port")
@@ -45,12 +45,12 @@ func main() {
 	}
 
 	ctx := context.Background()
-	eNGINE, err = mongodb.Connet(engineUri)
+	__ENGINE, err = mongodb.Connet(engineUri)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
 	defer func() {
-		if err := eNGINE.Close(ctx); err != nil {
+		if err := __ENGINE.Close(ctx); err != nil {
 			e.Logger.Error(err)
 		}
 	}()

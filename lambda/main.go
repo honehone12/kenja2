@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "kenja2/lambda/logs"
 
+func main() {
+	logs.FmtDefault()
 }
