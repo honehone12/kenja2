@@ -28,9 +28,10 @@ type Parent struct {
 }
 
 type Candidate struct {
-	ItemId       ItemId  `json:"item_id" bson:"item_id"`
-	Parent       *Parent `json:"parent,omitempty" bson:"parent,omitempty"`
-	Name         string  `json:"name" bson:"name"`
-	NameEnglish  *string `json:"name_english,omitempty" bson:"name_english"`
-	NameJapanese *string `json:"name_japanese,omitempty" bson:"name_japanese"`
+	Url          string   `json:"url" bson:"url"`
+	Parent       *Parent  `json:"parent,omitempty" bson:"parent"`
+	Name         string   `json:"name" bson:"name"`
+	NameEnglish  *string  `json:"name_english,omitempty" bson:"name_english"`
+	NameJapanese *string  `json:"name_japanese,omitempty" bson:"name_japanese"`
+	Aliases      []string `json:"aliases,omitempty" bson:"aliases"`
 }

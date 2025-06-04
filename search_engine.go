@@ -1,7 +1,11 @@
 package kenja2
 
-import "context"
+import (
+	"context"
+	"kenja2/documents"
+)
 
 type Engine interface {
+	TextSearch(keywords string, rating documents.Rating)
 	Close(ctx context.Context) error
 }

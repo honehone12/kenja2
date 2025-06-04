@@ -9,10 +9,7 @@ import (
 
 func TestSeDe(t *testing.T) {
 	s := `{
-		"item_id": {
-			"id": 0,
-			"item_type": 1
-		},
+		"url": "test.kenja",
 		"parent": {
 			"id": 1,
 			"name": "Test Parent",
@@ -27,14 +24,17 @@ func TestSeDe(t *testing.T) {
 	if err := json.Unmarshal([]byte(s), &c); err != nil {
 		panic(err)
 	}
-	if c.ItemId.Id != 0 || c.ItemId.ItemType != 1 {
-		panic("decoded wrong item id")
+	if c.Url != "test.kenja" {
+		panic("decoded wrong url")
 	}
 	if c.Parent.Id != 1 || c.Parent.Name != "Test Parent" || c.Parent.NameJapanese != nil {
 		panic("decoded wrong parent")
 	}
 	if c.Name != "Test Data" || *c.NameEnglish != "Test Name" || c.NameJapanese != nil {
 		panic("decoded wrong candidate")
+	}
+	if c.Aliases != nil {
+		panic("decoded wrong aliases")
 	}
 
 	b, err := json.MarshalIndent(c, "\t", "\t")
@@ -43,10 +43,7 @@ func TestSeDe(t *testing.T) {
 	}
 
 	s = `{
-		"item_id": {
-			"id": 0,
-			"item_type": 1
-		},
+		"url": "test.kenja",
 		"parent": {
 			"id": 1,
 			"name": "Test Parent"
