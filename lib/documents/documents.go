@@ -1,37 +1,31 @@
 package documents
 
-type Rating int32
-
-const (
-	RATING_UNKNOWN = iota
-	RATING_ALL_AGES
-	RATING_HENTAI
-)
+import "go.mongodb.org/mongo-driver/v2/bson"
 
 type ItemType int32
 
 const (
-	ITEM_TYPE_UNSPECIFIED = iota
+	ITEM_TYPE_UNSPECIFIED ItemType = iota
 	ITEM_TYPE_ANIME
 	ITEM_TYPE_CHARACTER
 )
 
-type ItemId struct {
-	Id       int64    `json:"id" bson:"id"`
-	ItemType ItemType `json:"item_type" bson:"item_type"`
+type Parent struct {
+	Id           bson.ObjectID `json:"id" bson:"id"`
+	Name         string        `json:"name" bson:"name"`
+	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese,omitempty"`
 }
 
-type Parent struct {
-	Id           int64   `json:"id" bson:"id"`
-	Name         string  `json:"name" bson:"name"`
-	NameJapanese *string `json:"name_japanese,omitempty" bson:"name_japanese"`
+func (p Parent) IsZero() bool {
+	return p.Id.IsZero() && len(p.Name) == 0 && len(p.NameJapanese) == 0
 }
 
 type Candidate struct {
+	ItemType     ItemType `json:"item_type,omitempty" bson:"item_type,omitempty"`
 	Url          string   `json:"url" bson:"url"`
-	Parent       *Parent  `json:"parent,omitempty" bson:"parent"`
+	Parent       Parent   `json:"parent,omitzero" bson:"parent,omitempty"`
 	Name         string   `json:"name" bson:"name"`
-	NameEnglish  *string  `json:"name_english,omitempty" bson:"name_english"`
-	NameJapanese *string  `json:"name_japanese,omitempty" bson:"name_japanese"`
-	Aliases      []string `json:"aliases,omitempty" bson:"aliases"`
+	NameEnglish  string   `json:"name_english,omitempty" bson:"name_english,omitempty"`
+	NameJapanese string   `json:"name_japanese,omitempty" bson:"name_japanese,omitempty"`
+	Aliases      []string `json:"aliases,omitempty" bson:"aliases,omitempty"`
 }
