@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vmihailenco/msgpack/v5"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -104,9 +105,6 @@ func TestDocumentsBson(t *testing.T) {
 		panic(err)
 	}
 
-	raw := bson.Raw(b)
-	fmt.Println(raw)
-
 	c = Candidate{}
 	if err := bson.Unmarshal(b, &c); err != nil {
 		panic(err)
@@ -134,11 +132,67 @@ func TestDocumentsBson(t *testing.T) {
 		panic(err)
 	}
 
-	raw = bson.Raw(b)
-	fmt.Println(raw)
-
 	c = Candidate{}
 	if err = bson.Unmarshal(b, &c); err != nil {
+		panic(err)
+	}
+	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
+		panic("decoded wrong parent")
+	}
+	if c.Aliases != nil {
+		panic("decoded wrong aliases")
+	}
+}
+
+func TestDocumentsMsgPack(t *testing.T) {
+	id := bson.NewObjectID()
+	c := Candidate{
+		ItemType: 1,
+		Url:      "kenja.test",
+		Parent: Parent{
+			Id:           id,
+			Name:         "Test",
+			NameJapanese: "",
+		},
+		Name:         "Test",
+		NameEnglish:  "Test",
+		NameJapanese: "",
+		Aliases:      []string{"Test"},
+	}
+	b, err := msgpack.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+
+	c = Candidate{}
+	if err := msgpack.Unmarshal(b, &c); err != nil {
+		panic(err)
+	}
+	if c.ItemType != 1 {
+		panic("decoded wrong item type")
+	}
+	if c.Url != "kenja.test" {
+		panic("decoded wrong url")
+	}
+	if !bytes.Equal(c.Parent.Id[:], id[:]) || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
+		panic("decoded wrong parent")
+	}
+	if c.Name != "Test" || c.NameEnglish != "Test" || c.NameJapanese != "" {
+		panic("decoded wrong names")
+	}
+	if len(c.Aliases) != 1 || c.Aliases[0] != "Test" {
+		panic("decoded wrong aliases")
+	}
+
+	c.Parent = Parent{}
+	c.Aliases = nil
+	b, err = msgpack.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+
+	c = Candidate{}
+	if err = msgpack.Unmarshal(b, &c); err != nil {
 		panic(err)
 	}
 	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
@@ -189,9 +243,6 @@ func TestQueriesBson(t *testing.T) {
 		panic(err)
 	}
 
-	raw := bson.Raw(b)
-	fmt.Println(raw)
-
 	q = TextQuery{}
 	if err = bson.Unmarshal(b, &q); err != nil {
 		panic(err)
@@ -201,7 +252,26 @@ func TestQueriesBson(t *testing.T) {
 	}
 }
 
-func TestJsonBson(t *testing.T) {
+func TestQueriesMsgPack(t *testing.T) {
+	q := TextQuery{
+		Rating:   1,
+		Keywords: "miku miku",
+	}
+	b, err := msgpack.Marshal(q)
+	if err != nil {
+		panic(err)
+	}
+
+	q = TextQuery{}
+	if err = msgpack.Unmarshal(b, &q); err != nil {
+		panic(err)
+	}
+	if q.Rating != 1 || q.Keywords != "miku miku" {
+		panic("decoded wrong rating")
+	}
+}
+
+func TestJsonBsonMsgPack(t *testing.T) {
 	d := make([]Candidate, 10000)
 	r := QueryResult{Result: d}
 
@@ -211,8 +281,8 @@ func TestJsonBson(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	r = QueryResult{}
-	if err = json.Unmarshal(jb, &r); err != nil {
+	rj := QueryResult{}
+	if err = json.Unmarshal(jb, &rj); err != nil {
 		panic(err)
 	}
 
@@ -224,12 +294,25 @@ func TestJsonBson(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	r = QueryResult{}
-	if err = bson.Unmarshal(bb, &r); err != nil {
+	rb := QueryResult{}
+	if err = bson.Unmarshal(bb, &rb); err != nil {
 		panic(err)
 	}
 
 	now3 := time.Now()
 	fmt.Printf("bson: %d bytes\n", len(bb))
 	fmt.Printf("time: %dmilsecs\n", now3.Sub(now2).Milliseconds())
+
+	mb, err := msgpack.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+	rm := QueryResult{}
+	if err = msgpack.Unmarshal(mb, &rm); err != nil {
+		panic(err)
+	}
+
+	now4 := time.Now()
+	fmt.Printf("msgpack: %d bytes\n", len(mb))
+	fmt.Printf("time: %dmilsecs\n", now4.Sub(now3).Milliseconds())
 }
