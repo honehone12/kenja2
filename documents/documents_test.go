@@ -218,7 +218,7 @@ func TestJsonBson(t *testing.T) {
 
 	now2 := time.Now()
 	fmt.Printf("json: %d bytes\n", len(jb))
-	fmt.Printf("time: %d\n", now2.Sub(now1))
+	fmt.Printf("time: %dmilsecs\n", now2.Sub(now1).Milliseconds())
 
 	bb, err := bson.Marshal(r)
 	if err != nil {
@@ -231,5 +231,5 @@ func TestJsonBson(t *testing.T) {
 
 	now3 := time.Now()
 	fmt.Printf("bson: %d bytes\n", len(bb))
-	fmt.Printf("time: %d\n", now3.Sub(now2))
+	fmt.Printf("time: %dmilsecs\n", now3.Sub(now2).Milliseconds())
 }
