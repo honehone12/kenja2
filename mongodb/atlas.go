@@ -9,10 +9,15 @@ import (
 type Atlas struct {
 	mongoClient
 	collections collections
-	marshaler   marshalers.Marshaler
+	encoder     marshalers.Marshaler
+	decoder     marshalers.Marshaler
 }
 
-func Connet[M marshalers.Marshaler](uri string, marshaler M) (*Atlas, error) {
+func Connet[E, D marshalers.Marshaler](
+	uri string,
+	encoder E,
+	decoder D,
+) (*Atlas, error) {
 	mongoClient, err := connect(uri)
 	if err != nil {
 		return nil, err
@@ -26,7 +31,8 @@ func Connet[M marshalers.Marshaler](uri string, marshaler M) (*Atlas, error) {
 	return &Atlas{
 		mongoClient,
 		collections,
-		marshaler,
+		encoder,
+		decoder,
 	}, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"kenja2/marshalers"
 )
 
-type Engine[M marshalers.Marshaler] interface {
+type Engine[E, D marshalers.Marshaler] interface {
 	TextSearch(input []byte)
 	Close(ctx context.Context) error
 }

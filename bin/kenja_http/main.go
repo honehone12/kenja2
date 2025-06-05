@@ -15,7 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var __ENGINE kenja2.Engine[marshalers.Json]
+var __ENGINE kenja2.Engine[marshalers.Json, marshalers.Json]
 
 func args() uint {
 	port := flag.Uint("port", 8080, "listen port")
@@ -46,8 +46,9 @@ func main() {
 	}
 
 	ctx := context.Background()
-	m := marshalers.NewJsonMarshler()
-	__ENGINE, err := mongodb.Connet(engineUri, m)
+	enc := marshalers.NewJsonMarshler()
+	dec := marshalers.NewJsonMarshler()
+	__ENGINE, err := mongodb.Connet(engineUri, enc, dec)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
