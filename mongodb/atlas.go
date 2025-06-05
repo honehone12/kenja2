@@ -2,22 +2,21 @@ package mongodb
 
 import (
 	"context"
-	"kenja2/documents"
 	"kenja2/marshalers"
 )
 
-type Atlas struct {
+type Atlas[E, D marshalers.Marshaler] struct {
 	mongoClient
 	collections collections
-	encoder     marshalers.Marshaler
-	decoder     marshalers.Marshaler
+	encoder     E
+	decoder     D
 }
 
 func Connet[E, D marshalers.Marshaler](
 	uri string,
 	encoder E,
 	decoder D,
-) (*Atlas, error) {
+) (*Atlas[E, D], error) {
 	mongoClient, err := connect(uri)
 	if err != nil {
 		return nil, err
@@ -28,7 +27,7 @@ func Connet[E, D marshalers.Marshaler](
 		return nil, err
 	}
 
-	return &Atlas{
+	return &Atlas[E, D]{
 		mongoClient,
 		collections,
 		encoder,
@@ -36,10 +35,10 @@ func Connet[E, D marshalers.Marshaler](
 	}, nil
 }
 
-func (a *Atlas) TextSearch(keywords string, rating documents.Rating) {
-
+func (a *Atlas[E, D]) TextSearch(input []byte) ([]byte, error) {
+	return nil, nil
 }
 
-func (a *Atlas) Close(ctx context.Context) error {
+func (a *Atlas[E, D]) Close(ctx context.Context) error {
 	return a.client.Disconnect(ctx)
 }
