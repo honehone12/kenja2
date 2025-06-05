@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -29,18 +30,18 @@ func TestDocuments(t *testing.T) {
 	if err := json.Unmarshal([]byte(s), &c); err != nil {
 		panic(err)
 	}
-	if c.Url != "test.kenja" {
-		panic("decoded wrong url")
-	}
 	if c.ItemType != 1 {
 		panic("decoded wrong item type")
+	}
+	if c.Url != "test.kenja" {
+		panic("decoded wrong url")
 	}
 	oid := bson.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 	if !bytes.Equal(oid[:], c.Parent.Id[:]) || c.Parent.Name != "Test Parent" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
 	}
 	if c.Name != "Test Data" || c.NameEnglish != "Test Name" || c.NameJapanese != "" {
-		panic("decoded wrong candidate")
+		panic("decoded wrong names")
 	}
 	if c.Aliases != nil {
 		panic("decoded wrong aliases")
@@ -83,6 +84,71 @@ func TestDocuments(t *testing.T) {
 	}
 }
 
+func TestDocumentsBson(t *testing.T) {
+	id := bson.NewObjectID()
+	c := Candidate{
+		ItemType: 1,
+		Url:      "kenja.test",
+		Parent: Parent{
+			Id:           id,
+			Name:         "Test",
+			NameJapanese: "",
+		},
+		Name:         "Test",
+		NameEnglish:  "Test",
+		NameJapanese: "",
+		Aliases:      []string{"Test"},
+	}
+	b, err := bson.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+
+	raw := bson.Raw(b)
+	fmt.Println(raw)
+
+	c = Candidate{}
+	if err := bson.Unmarshal(b, &c); err != nil {
+		panic(err)
+	}
+	if c.ItemType != 1 {
+		panic("decoded wrong item type")
+	}
+	if c.Url != "kenja.test" {
+		panic("decoded wrong url")
+	}
+	if !bytes.Equal(c.Parent.Id[:], id[:]) || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
+		panic("decoded wrong parent")
+	}
+	if c.Name != "Test" || c.NameEnglish != "Test" || c.NameJapanese != "" {
+		panic("decoded wrong names")
+	}
+	if len(c.Aliases) != 1 || c.Aliases[0] != "Test" {
+		panic("decoded wrong aliases")
+	}
+
+	c.Parent = Parent{}
+	c.Aliases = nil
+	b, err = bson.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+
+	raw = bson.Raw(b)
+	fmt.Println(raw)
+
+	c = Candidate{}
+	if err = bson.Unmarshal(b, &c); err != nil {
+		panic(err)
+	}
+	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
+		panic("decoded wrong parent")
+	}
+	if c.Aliases != nil {
+		panic("decoded wrong aliases")
+	}
+}
+
 func TestQueries(t *testing.T) {
 	s := `{
 		"rating": 1,
@@ -111,4 +177,59 @@ func TestQueries(t *testing.T) {
 		fmt.Println(string(b))
 		panic("encoded wrong query")
 	}
+}
+
+func TestQueriesBson(t *testing.T) {
+	q := TextQuery{
+		Rating:   1,
+		Keywords: "miku miku",
+	}
+	b, err := bson.Marshal(q)
+	if err != nil {
+		panic(err)
+	}
+
+	raw := bson.Raw(b)
+	fmt.Println(raw)
+
+	q = TextQuery{}
+	if err = bson.Unmarshal(b, &q); err != nil {
+		panic(err)
+	}
+	if q.Rating != 1 || q.Keywords != "miku miku" {
+		panic("decoded wrong rating")
+	}
+}
+
+func TestJsonBson(t *testing.T) {
+	d := make([]Candidate, 1000)
+	r := QueryResult{Result: d}
+
+	now1 := time.Now()
+
+	jb, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+	r = QueryResult{}
+	if err = json.Unmarshal(jb, &r); err != nil {
+		panic(err)
+	}
+	fmt.Printf("json: %d bytes\n", len(jb))
+
+	now2 := time.Now()
+	fmt.Printf("time: %d\n", now2.Sub(now1))
+
+	bb, err := bson.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+	r = QueryResult{}
+	if err = bson.Unmarshal(bb, &r); err != nil {
+		panic(err)
+	}
+	fmt.Printf("bson: %d bytes\n", len(bb))
+
+	now3 := time.Now()
+	fmt.Printf("time: %d\n", now3.Sub(now2))
 }

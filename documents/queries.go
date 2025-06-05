@@ -9,6 +9,10 @@ const (
 )
 
 type TextQuery struct {
-	Rating   Rating `json:"rating" bson:"rating"`
-	Keywords string `json:"keywords" bson:"keywords"`
+	Rating   Rating `json:"rating,omitempty" bson:"rating,omitempty"`
+	Keywords string `json:"keywords,omitempty" bson:"keywords,omitempty"`
+}
+
+type QueryResult struct {
+	Result []Candidate `json:"result,omitempty" bson:"result,omitempty"`
 }
