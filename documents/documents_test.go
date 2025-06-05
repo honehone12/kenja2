@@ -202,7 +202,7 @@ func TestQueriesBson(t *testing.T) {
 }
 
 func TestJsonBson(t *testing.T) {
-	d := make([]Candidate, 1000)
+	d := make([]Candidate, 10000)
 	r := QueryResult{Result: d}
 
 	now1 := time.Now()
@@ -215,9 +215,9 @@ func TestJsonBson(t *testing.T) {
 	if err = json.Unmarshal(jb, &r); err != nil {
 		panic(err)
 	}
-	fmt.Printf("json: %d bytes\n", len(jb))
 
 	now2 := time.Now()
+	fmt.Printf("json: %d bytes\n", len(jb))
 	fmt.Printf("time: %d\n", now2.Sub(now1))
 
 	bb, err := bson.Marshal(r)
@@ -228,8 +228,8 @@ func TestJsonBson(t *testing.T) {
 	if err = bson.Unmarshal(bb, &r); err != nil {
 		panic(err)
 	}
-	fmt.Printf("bson: %d bytes\n", len(bb))
 
 	now3 := time.Now()
+	fmt.Printf("bson: %d bytes\n", len(bb))
 	fmt.Printf("time: %d\n", now3.Sub(now2))
 }
