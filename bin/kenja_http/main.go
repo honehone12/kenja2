@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"kenja2"
+	"kenja2/marshalers"
 	"kenja2/mongodb"
 
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var __ENGINE kenja2.Engine[kenja2.Json]
+var __ENGINE kenja2.Engine[marshalers.Json]
 
 func args() uint {
 	port := flag.Uint("port", 8080, "listen port")
@@ -45,8 +46,8 @@ func main() {
 	}
 
 	ctx := context.Background()
-	marshaler := kenja2.Json{}
-	__ENGINE, err := mongodb.Connet(engineUri, marshaler)
+	m := marshalers.NewJsonMarshler()
+	__ENGINE, err := mongodb.Connet(engineUri, m)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
