@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSeDe(t *testing.T) {
+func TestDocuments(t *testing.T) {
 	s := `{
 		"url": "test.kenja",
 		"parent": {
