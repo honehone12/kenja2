@@ -2,7 +2,7 @@ module kenja2/bin
 
 go 1.24.2
 
-require kenja2/lib v0.0.0
+require kenja2 v0.0.0
 
 require (
 	github.com/joho/godotenv v1.5.1 // indirect
@@ -18,4 +18,4 @@ require (
 	golang.org/x/text v0.25.0 // indirect
 )
 
-replace kenja2/lib => ./../lib
+replace kenja2 => ./..

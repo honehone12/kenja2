@@ -1,4 +1,4 @@
-module kenja2/lib
+module kenja2
 
 go 1.24.2
 

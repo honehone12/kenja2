@@ -2,7 +2,7 @@ module kenja2/lambda
 
 go 1.24.2
 
-require kenja2/lib v0.0.0
+require kenja2 v0.0.0
 
 require (
 	github.com/aws/aws-lambda-go v1.49.0 // indirect
@@ -10,4 +10,4 @@ require (
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 )
 
-replace kenja2/lib => ./../lib
+replace kenja2 => ./..

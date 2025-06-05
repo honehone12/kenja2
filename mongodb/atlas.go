@@ -2,28 +2,31 @@ package mongodb
 
 import (
 	"context"
-	"kenja2/lib/documents"
+	"kenja2/documents"
+	"kenja2/marshalers"
 )
 
 type AtlaSearch struct {
 	mongoClient
 	collections collections
+	marshaler   marshalers.Marshaler
 }
 
-func Connet(uri string) (*AtlaSearch, error) {
-	m, err := connect(uri)
+func Connet[M marshalers.Marshaler](uri string, marshaler M) (*AtlaSearch, error) {
+	mongoClient, err := connect(uri)
 	if err != nil {
 		return nil, err
 	}
 
-	coll, err := newCollections(m.database)
+	collections, err := newCollections(mongoClient.database)
 	if err != nil {
 		return nil, err
 	}
 
 	return &AtlaSearch{
-		mongoClient: m,
-		collections: coll,
+		mongoClient,
+		collections,
+		marshaler,
 	}, nil
 }
 
