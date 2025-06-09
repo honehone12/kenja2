@@ -1,4 +1,4 @@
-package ed
+package endec
 
 import (
 	"encoding/json"

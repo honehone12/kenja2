@@ -11,6 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
+var _ bson.Zeroer = Parent{}
+
 func TestDocuments(t *testing.T) {
 	s := `{
 		"item_type": 1,

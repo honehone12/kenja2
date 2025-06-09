@@ -1,4 +1,4 @@
-package ed
+package endec
 
 var _ Encoder = Json{}
 var _ Decoder = Json{}
