@@ -6,6 +6,7 @@ import (
 )
 
 type Engine[E, D marshalers.Marshaler] interface {
-	TextSearch(input []byte) ([]byte, error)
+	TextSearch(ctx context.Context, input []byte) ([]byte, error)
+	VectorSeach(ctx context.Context)
 	Close(ctx context.Context) error
 }

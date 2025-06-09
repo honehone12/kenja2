@@ -14,5 +14,5 @@ type TextQuery struct {
 }
 
 type QueryResult struct {
-	Result []Candidate `json:"result,omitempty" bson:"result,omitempty" msgpack:"result,omitempty"`
+	Candidates []Candidate `json:"result,omitempty" bson:"result,omitempty" msgpack:"result,omitempty"`
 }

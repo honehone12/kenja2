@@ -273,7 +273,7 @@ func TestQueriesMsgPack(t *testing.T) {
 
 func TestJsonBsonMsgPack(t *testing.T) {
 	d := make([]Candidate, 10000)
-	r := QueryResult{Result: d}
+	r := QueryResult{Candidates: d}
 
 	now1 := time.Now()
 
