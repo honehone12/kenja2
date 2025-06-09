@@ -2,13 +2,13 @@ package mongodb
 
 import (
 	"kenja2"
-	"kenja2/marshalers"
+	"kenja2/ed"
 )
 
-var _ kenja2.Engine[marshalers.MsgPack, marshalers.Json] = &Atlas[
-	marshalers.MsgPack,
-	marshalers.Json,
+var _ kenja2.Engine[ed.MsgPack, ed.Json] = &Atlas[
+	ed.MsgPack,
+	ed.Json,
 ]{
-	encoder: marshalers.MsgPack{},
-	decoder: marshalers.Json{},
+	encoder: ed.MsgPack{},
+	decoder: ed.Json{},
 }

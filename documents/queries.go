@@ -14,6 +14,8 @@ type TextQuery struct {
 }
 
 type VectorQuery struct {
+	Rating Rating `json:"rating,omitempty" msgpack:"rating,omitempty"`
+	Id     string `json:"id,omitempty" msgpack:"id,omitempty"`
 }
 
 type QueryResult struct {

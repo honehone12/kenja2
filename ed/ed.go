@@ -1,4 +1,4 @@
-package marshalers
+package ed
 
 import (
 	"encoding/json"
@@ -6,17 +6,21 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-type Marshaler interface {
+type Encoder interface {
 	Marshal(v any) ([]byte, error)
+	ContentType() string
+}
+
+type Decoder interface {
 	Unmarshal(data []byte, v any) error
 	ContentType() string
 }
 
-func NewJsonMarshler() Json {
+func NewJson() Json {
 	return Json{}
 }
 
-func NewMsgPackMarshaler() MsgPack {
+func NewMsgPack() MsgPack {
 	return MsgPack{}
 }
 

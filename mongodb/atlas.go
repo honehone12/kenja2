@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"kenja2/documents"
-	"kenja2/marshalers"
+	"kenja2/ed"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -12,14 +12,14 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type Atlas[E, D marshalers.Marshaler] struct {
+type Atlas[E ed.Encoder, D ed.Decoder] struct {
 	mongoClient
 	collections collections
 	encoder     E
 	decoder     D
 }
 
-func Connet[E, D marshalers.Marshaler](
+func Connet[E ed.Encoder, D ed.Decoder](
 	uri string,
 	encoder E,
 	decoder D,
@@ -108,7 +108,10 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 }
 
 func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, error) {
-
+	q := documents.VectorQuery{}
+	if err := a.decoder.Unmarshal(input, &q); err != nil {
+		return nil, err
+	}
 }
 
 func (a *Atlas[E, D]) Close(ctx context.Context) error {
