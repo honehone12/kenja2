@@ -11,8 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var _ bson.Zeroer = Parent{}
-
 func TestDocuments(t *testing.T) {
 	s := `{
 		"item_type": 1,
@@ -85,62 +83,10 @@ func TestDocuments(t *testing.T) {
 	}
 }
 
-func TestDocumentsBson(t *testing.T) {
-	id := bson.NewObjectID()
-	c := Candidate{
-		ItemType: 1,
-		Url:      "kenja.test",
-		Parent: Parent{
-			Id:           id,
-			Name:         "Test",
-			NameJapanese: "",
-		},
-		Name:         "Test",
-		NameEnglish:  "Test",
-		NameJapanese: "",
-		Aliases:      []string{"Test"},
-	}
-	b, err := bson.Marshal(c)
-	if err != nil {
-		panic(err)
-	}
-
-	c = Candidate{}
-	if err := bson.Unmarshal(b, &c); err != nil {
-		panic(err)
-	}
-	if c.ItemType != 1 {
-		panic("decoded wrong item type")
-	}
-	if c.Url != "kenja.test" {
-		panic("decoded wrong url")
-	}
-	if !bytes.Equal(c.Parent.Id[:], id[:]) || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
-		panic("decoded wrong parent")
-	}
-	if c.Name != "Test" || c.NameEnglish != "Test" || c.NameJapanese != "" {
-		panic("decoded wrong names")
-	}
-	if len(c.Aliases) != 1 || c.Aliases[0] != "Test" {
-		panic("decoded wrong aliases")
-	}
-
-	c.Parent = Parent{}
-	c.Aliases = nil
-	b, err = bson.Marshal(c)
-	if err != nil {
-		panic(err)
-	}
-
-	c = Candidate{}
-	if err = bson.Unmarshal(b, &c); err != nil {
-		panic(err)
-	}
-	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
-		panic("decoded wrong parent")
-	}
-	if c.Aliases != nil {
-		panic("decoded wrong aliases")
+func TestParentIsZero(t *testing.T) {
+	p := Parent{}
+	if !p.IsZero() {
+		panic("parent should be zero")
 	}
 }
 
@@ -230,25 +176,6 @@ func TestQueries(t *testing.T) {
 	if !bytes.Equal(b, []byte(s)) {
 		fmt.Println(string(b))
 		panic("encoded wrong query")
-	}
-}
-
-func TestQueriesBson(t *testing.T) {
-	q := TextQuery{
-		Rating:   1,
-		Keywords: "miku miku",
-	}
-	b, err := bson.Marshal(q)
-	if err != nil {
-		panic(err)
-	}
-
-	q = TextQuery{}
-	if err = bson.Unmarshal(b, &q); err != nil {
-		panic(err)
-	}
-	if q.Rating != 1 || q.Keywords != "miku miku" {
-		panic("decoded wrong rating")
 	}
 }
 

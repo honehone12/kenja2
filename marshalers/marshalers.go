@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/vmihailenco/msgpack/v5"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Marshaler interface {
@@ -15,10 +14,6 @@ type Marshaler interface {
 
 func NewJsonMarshler() Json {
 	return Json{}
-}
-
-func NewBsonMarshaler() Bson {
-	return Bson{}
 }
 
 func NewMsgPackMarshaler() MsgPack {
@@ -37,20 +32,6 @@ func (j Json) Unmarshal(data []byte, v any) error {
 
 func (j Json) ContentType() string {
 	return "application/json; charset=utf8"
-}
-
-type Bson struct{}
-
-func (b Bson) Marshal(v any) ([]byte, error) {
-	return bson.Marshal(v)
-}
-
-func (b Bson) Unmarshal(data []byte, v any) error {
-	return bson.Unmarshal(data, v)
-}
-
-func (b Bson) ContentType() string {
-	return "application/bson"
 }
 
 type MsgPack struct{}

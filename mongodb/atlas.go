@@ -107,7 +107,7 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 	return b, err
 }
 
-func (a *Atlas[E, D]) VectorSeach(ctx context.Context) {
+func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, error) {
 
 }
 
