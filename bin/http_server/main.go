@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"kenja2"
 	"kenja2/endec"
 	"kenja2/mongodb"
+	"time"
 
 	"net/http"
 	"os"
@@ -14,6 +16,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
+
+const REQUEST_BODY_LIMIT = 1024
 
 var __ENGINE kenja2.Engine[endec.Json, endec.Json]
 
@@ -34,7 +38,69 @@ func env() (string, error) {
 }
 
 func text(e echo.Context) error {
-	return e.JSON(http.StatusOK, `{"texts": ["hello"]}`)
+	req := e.Request()
+	if req.ContentLength > REQUEST_BODY_LIMIT {
+		e.Logger().Error("content length over limit")
+		return e.String(http.StatusBadRequest, "bad request")
+	}
+	contentType := req.Header.Get("Content-Type")
+	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
+		e.Logger().Error("unexpected content type header")
+		return e.String(http.StatusBadRequest, "bad request")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		e.Logger().Error(err)
+		return e.String(http.StatusInternalServerError, "internal error")
+	}
+
+	b, err := __ENGINE.TextSearch(ctx, body)
+	if err != nil {
+		e.Logger().Error(err)
+		return e.String(http.StatusInternalServerError, "internal error")
+	}
+
+	return e.Blob(
+		http.StatusOK,
+		__ENGINE.ResponseContentType(),
+		b,
+	)
+}
+
+func vector(e echo.Context) error {
+	req := e.Request()
+	if req.ContentLength > REQUEST_BODY_LIMIT {
+		e.Logger().Error("content length over limit")
+		return e.String(http.StatusBadRequest, "bad request")
+	}
+	contentType := req.Header.Get("Content-Type")
+	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
+		e.Logger().Error("unexpected content type header")
+		return e.String(http.StatusBadRequest, "bad request")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		e.Logger().Error(err)
+		return e.String(http.StatusInternalServerError, "internal error")
+	}
+
+	b, err := __ENGINE.VectorSeach(ctx, body)
+	if err != nil {
+		e.Logger().Error(err)
+		return e.String(http.StatusInternalServerError, "internal error")
+	}
+
+	return e.Blob(
+		http.StatusOK,
+		__ENGINE.ResponseContentType(),
+		b,
+	)
 }
 
 func main() {
@@ -61,6 +127,7 @@ func main() {
 	}()
 
 	e.GET("/text", text)
+	e.GET("/vector", vector)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	e.Logger.Infof("started listening at %s\n", listenAt)

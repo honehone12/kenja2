@@ -44,6 +44,14 @@ func Connect[E endec.Encoder, D endec.Decoder](
 	}, nil
 }
 
+func (a *Atlas[E, D]) RequestContentType() string {
+	return a.decoder.ContentType()
+}
+
+func (a *Atlas[E, D]) ResponseContentType() string {
+	return a.encoder.ContentType()
+}
+
 func (a *Atlas[E, D]) collection(rating documents.Rating) (*mongo.Collection, error) {
 	switch rating {
 	case documents.RATING_ALL_AGES:
@@ -105,7 +113,7 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		}},
 	)
 
-	op := options.Aggregate().SetMaxAwaitTime(time.Duration(time.Second))
+	op := options.Aggregate().SetMaxAwaitTime(time.Second)
 	stream, err := c.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
@@ -197,7 +205,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 			"image_vector": 0,
 		}},
 	}
-	op := options.Aggregate().SetMaxAwaitTime(time.Duration(time.Second))
+	op := options.Aggregate().SetMaxAwaitTime(time.Second)
 	stream, err := c.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
