@@ -12,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+const ATLAS_SEARCH_LIMIT = 100
+
 type Atlas[E endec.Encoder, D endec.Decoder] struct {
 	mongoClient
 	collections collections
@@ -96,7 +98,7 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		}})
 	}
 	p = append(p,
-		bson.E{Key: "$limit", Value: 100},
+		bson.E{Key: "$limit", Value: ATLAS_SEARCH_LIMIT},
 		bson.E{Key: "$project", Value: bson.M{
 			"text_vector":  0,
 			"image_vector": 0,
@@ -184,11 +186,11 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 			"filter": bson.M{
 				"item_type": i,
 			},
-			"index":        "vector",
-			"limit":        100,
-			"numCandidate": 20 * 100,
-			"path":         targetField,
-			"queryVector":  srcVec,
+			"index":         "vector",
+			"limit":         ATLAS_SEARCH_LIMIT,
+			"numCandidates": 20 * ATLAS_SEARCH_LIMIT,
+			"path":          targetField,
+			"queryVector":   srcVec,
 		}},
 		{Key: "$project", Value: bson.M{
 			"text_vector":  0,

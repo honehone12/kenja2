@@ -63,6 +63,7 @@ func main() {
 	e.GET("/text", text)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
+	e.Logger.Infof("started listening at %s\n", listenAt)
 	if err := e.Start(listenAt); err != nil {
 		e.Logger.Error(err)
 	}
