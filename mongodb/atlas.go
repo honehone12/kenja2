@@ -201,6 +201,8 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 				"path":          targetField,
 				"queryVector":   srcVec,
 			}},
+		},
+		{
 			{Key: "$project", Value: bson.M{
 				"text_vector":  0,
 				"image_vector": 0,
