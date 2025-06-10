@@ -84,6 +84,8 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		return nil, errors.New("invalid keywords")
 	}
 
+	//p := mongo.Pipeline{}
+
 	p := bson.D{
 		{Key: "$search", Value: bson.M{
 			"index": "text",

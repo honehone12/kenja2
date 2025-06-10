@@ -42,12 +42,12 @@ func env() (string, error) {
 func text(e echo.Context) error {
 	req := e.Request()
 	if req.ContentLength > REQUEST_BODY_LIMIT {
-		log.Error("content length over limit")
+		e.Logger().Error("content length over limit")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		log.Error("unexpected content type header")
+		e.Logger().Error("unexpected content type header")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 
@@ -55,13 +55,13 @@ func text(e echo.Context) error {
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		log.Error(err)
+		e.Logger().Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
 	b, err := __ENGINE.TextSearch(ctx, body)
 	if err != nil {
-		log.Error(err)
+		e.Logger().Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
@@ -75,12 +75,12 @@ func text(e echo.Context) error {
 func vector(e echo.Context) error {
 	req := e.Request()
 	if req.ContentLength > REQUEST_BODY_LIMIT {
-		log.Error("content length over limit")
+		e.Logger().Error("content length over limit")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		log.Error("unexpected content type header")
+		e.Logger().Error("unexpected content type header")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 
@@ -88,13 +88,13 @@ func vector(e echo.Context) error {
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		log.Error(err)
+		e.Logger().Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
 	b, err := __ENGINE.VectorSeach(ctx, body)
 	if err != nil {
-		log.Error(err)
+		e.Logger().Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
@@ -109,26 +109,26 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Logger.SetLevel(log.INFO)
-	e.Logger.SetPrefix("KENJA")
+	e.Logger.SetPrefix("KENJA2")
 
 	port := args()
 	engineUri, err := env()
 	if err != nil {
-		log.Fatal(err)
+		e.Logger.Fatal(err)
 	}
 
 	ctx := context.Background()
-	__ENGINE, err := mongodb.Connect(
+	__ENGINE, err = mongodb.Connect(
 		engineUri,
 		endec.NewJson(),
 		endec.NewJson(),
 	)
 	if err != nil {
-		log.Fatal(err)
+		e.Logger.Fatal(err)
 	}
 	defer func() {
 		if err := __ENGINE.Close(ctx); err != nil {
-			log.Error(err)
+			e.Logger.Error(err)
 		}
 	}()
 
@@ -137,6 +137,6 @@ func main() {
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {
-		log.Error(err)
+		e.Logger.Error(err)
 	}
 }
