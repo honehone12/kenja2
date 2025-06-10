@@ -58,17 +58,17 @@ func (i ItemType) I32() (int32, error) {
 }
 
 type TextQuery struct {
-	Rating   Rating   `json:"rating,omitempty" msgpack:"rating,omitempty"`
-	ItemType ItemType `json:"item_type,omitempty" msgpack:"item_type,omitempty"`
-	Keywords string   `json:"keywords,omitempty" msgpack:"keywords,omitempty"`
+	Rating   Rating   `json:"rating" msgpack:"rating"`
+	ItemType ItemType `json:"item_type" msgpack:"item_type"`
+	Keywords string   `json:"keywords" msgpack:"keywords"`
 }
 
 type VectorQuery struct {
-	Rating      Rating      `json:"rating,omitempty" msgpack:"rating,omitempty"`
-	ItemType    ItemType    `json:"item_type,omitempty" msgpack:"item_type,omitempty"`
-	SourceField VectorField `json:"source_field,omitempty" msgpack:"source_field,omitempty"`
-	TargetField VectorField `json:"target_field,omitempty" msgpack:"target_field,omitempty"`
-	Id          string      `json:"id,omitempty" msgpack:"id,omitempty"`
+	Rating      Rating      `json:"rating" msgpack:"rating"`
+	ItemType    ItemType    `json:"item_type" msgpack:"item_type"`
+	SourceField VectorField `json:"source_field" msgpack:"source_field"`
+	TargetField VectorField `json:"target_field" msgpack:"target_field"`
+	Id          string      `json:"id" msgpack:"id"`
 }
 
 type QueryResult struct {
