@@ -84,36 +84,40 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		return nil, errors.New("invalid keywords")
 	}
 
-	//p := mongo.Pipeline{}
-
-	p := bson.D{
-		{Key: "$search", Value: bson.M{
-			"index": "text",
-			"text": bson.M{
-				"query": k,
-				"path": []string{
-					"name",
-					"name_english",
-					"aliases",
-					"description",
-					"parent.name",
+	p := mongo.Pipeline{
+		{
+			{Key: "$search", Value: bson.M{
+				"index": "text",
+				"text": bson.M{
+					"query": k,
+					"path": []string{
+						"name",
+						"name_english",
+						"aliases",
+						"description",
+						"parent.name",
+					},
+					"matchCriteria": "all",
 				},
-				"matchCriteria": "all",
-			},
-		}},
+			}},
+		},
 	}
+
 	if i != documents.ITEM_TYPE_UNSPECIFIED {
-		p = append(p, bson.E{Key: "$match", Value: bson.M{
-			"item_type": i,
-		}})
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"item_type": i,
+			}},
+		})
 	}
-	p = append(p,
-		bson.E{Key: "$limit", Value: ATLAS_SEARCH_LIMIT},
-		bson.E{Key: "$project", Value: bson.M{
+
+	p = append(p, bson.D{
+		{Key: "$limit", Value: ATLAS_SEARCH_LIMIT},
+		{Key: "$project", Value: bson.M{
 			"text_vector":  0,
 			"image_vector": 0,
 		}},
-	)
+	})
 
 	op := options.Aggregate().SetMaxAwaitTime(time.Second)
 	stream, err := c.Aggregate(ctx, p, op)
@@ -190,22 +194,24 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 		return nil, err
 	}
 
-	p := bson.D{
-		{Key: "$vectorSearch", Value: bson.M{
-			"exact": false,
-			"filter": bson.M{
-				"item_type": i,
-			},
-			"index":         "vector",
-			"limit":         ATLAS_SEARCH_LIMIT,
-			"numCandidates": 20 * ATLAS_SEARCH_LIMIT,
-			"path":          targetField,
-			"queryVector":   srcVec,
-		}},
-		{Key: "$project", Value: bson.M{
-			"text_vector":  0,
-			"image_vector": 0,
-		}},
+	p := mongo.Pipeline{
+		{
+			{Key: "$vectorSearch", Value: bson.M{
+				"exact": false,
+				"filter": bson.M{
+					"item_type": i,
+				},
+				"index":         "vector",
+				"limit":         ATLAS_SEARCH_LIMIT,
+				"numCandidates": 20 * ATLAS_SEARCH_LIMIT,
+				"path":          targetField,
+				"queryVector":   srcVec,
+			}},
+			{Key: "$project", Value: bson.M{
+				"text_vector":  0,
+				"image_vector": 0,
+			}},
+		},
 	}
 	op := options.Aggregate().SetMaxAwaitTime(time.Second)
 	stream, err := c.Aggregate(ctx, p, op)
