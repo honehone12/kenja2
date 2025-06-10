@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+const ATLAS_SEARCH_SIZE = 50
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
 
@@ -197,7 +198,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 				},
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
-				"numCandidates": 20 * ATLAS_SEARCH_LIMIT,
+				"numCandidates": ATLAS_SEARCH_SIZE * ATLAS_SEARCH_LIMIT,
 				"path":          targetField,
 				"queryVector":   srcVec,
 			}},
