@@ -99,6 +99,7 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 					},
 					"matchCriteria": "all",
 				},
+				"returnStoredSource": true,
 			}},
 		},
 	}
@@ -111,13 +112,13 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		})
 	}
 
-	p = append(p, bson.D{
-		{Key: "$limit", Value: ATLAS_SEARCH_LIMIT},
-		{Key: "$project", Value: bson.M{
+	p = append(p,
+		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
+		bson.D{{Key: "$project", Value: bson.M{
 			"text_vector":  0,
 			"image_vector": 0,
-		}},
-	})
+		}}},
+	)
 
 	op := options.Aggregate().SetMaxAwaitTime(time.Second)
 	stream, err := c.Aggregate(ctx, p, op)

@@ -1,6 +1,8 @@
 package mongodb
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestKeywords(t *testing.T) {
 	s := "$.,{}[]():;/`"
@@ -25,5 +27,11 @@ func TestKeywords(t *testing.T) {
 	clean = CleanKeywords(s)
 	if clean != "a b c d e" {
 		panic("replacer fail")
+	}
+
+	s = "school music band club"
+	clean = CleanKeywords(s)
+	if clean != "school music band club" {
+		panic("breaking keywords")
 	}
 }
