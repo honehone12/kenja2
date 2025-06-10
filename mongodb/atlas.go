@@ -13,12 +13,12 @@ import (
 )
 
 const ATLAS_SEARCH_LIMIT = 100
+const ATLAS_KW_LIMIT = 100
 
 type Atlas[E endec.Encoder, D endec.Decoder] struct {
 	mongoClient
-	collections collections
-	encoder     E
-	decoder     D
+	encoder E
+	decoder D
 }
 
 func Connect[E endec.Encoder, D endec.Decoder](
@@ -31,14 +31,8 @@ func Connect[E endec.Encoder, D endec.Decoder](
 		return nil, err
 	}
 
-	collections, err := newCollections(mongoClient.database)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Atlas[E, D]{
 		mongoClient,
-		collections,
 		encoder,
 		decoder,
 	}, nil
@@ -52,31 +46,13 @@ func (a *Atlas[E, D]) ResponseContentType() string {
 	return a.encoder.ContentType()
 }
 
-func (a *Atlas[E, D]) collection(rating documents.Rating) (*mongo.Collection, error) {
-	switch rating {
-	case documents.RATING_ALL_AGES:
-		return a.collections.allAges, nil
-	case documents.RATING_HENTAI:
-		return nil, errors.New("the search service is not available yet")
-	default:
-		return nil, errors.New("unexpected rating")
-	}
-}
-
 func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, error) {
 	q := documents.TextQuery{}
 	if err := a.decoder.Unmarshal(input, &q); err != nil {
 		return nil, err
 	}
-
-	c, err := a.collection(q.Rating)
-	if err != nil {
-		return nil, err
-	}
-
-	i, err := q.ItemType.To32()
-	if err != nil {
-		return nil, err
+	if len(q.Keywords) > ATLAS_KW_LIMIT {
+		return nil, errors.New("unexpected keywords length")
 	}
 
 	k := CleanKeywords(q.Keywords)
@@ -104,7 +80,12 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		},
 	}
 
-	if i != documents.ITEM_TYPE_UNSPECIFIED {
+	if q.ItemType != documents.ITEM_TYPE_UNSPECIFIED {
+		i, err := q.ItemType.I32()
+		if err != nil {
+			return nil, err
+		}
+
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
 				"item_type": i,
@@ -112,16 +93,25 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		})
 	}
 
+	if q.Rating != documents.RATING_UNSPECIFIED {
+		r, err := q.Rating.I32()
+		if err != nil {
+			return nil, err
+		}
+
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"rating": r,
+			}},
+		})
+	}
+
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
-		bson.D{{Key: "$project", Value: bson.M{
-			"text_vector":  0,
-			"image_vector": 0,
-		}}},
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(time.Second)
-	stream, err := c.Aggregate(ctx, p, op)
+	stream, err := a.collection.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
 	}
@@ -131,10 +121,9 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		return nil, err
 	}
 
-	r := documents.QueryResult{
+	b, err := a.encoder.Marshal(documents.QueryResult{
 		Candidates: candidates,
-	}
-	b, err := a.encoder.Marshal(r)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -147,18 +136,21 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 	if err := a.decoder.Unmarshal(input, &q); err != nil {
 		return nil, err
 	}
-
-	c, err := a.collection(q.Rating)
-	if err != nil {
-		return nil, err
-	}
-
-	i, err := q.ItemType.To32()
-	if err != nil {
-		return nil, err
-	}
-	if i == documents.ITEM_TYPE_UNSPECIFIED {
+	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
+	}
+	if q.Rating == documents.RATING_UNSPECIFIED {
+		return nil, errors.New("vector search requires rating")
+	}
+
+	i, err := q.ItemType.I32()
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := q.Rating.I32()
+	if err != nil {
+		return nil, err
 	}
 
 	var srcVec bson.Binary
@@ -175,7 +167,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 
 		f := bson.D{{Key: "_id", Value: id}}
 		op := options.FindOne().SetProjection(bson.D{{Key: src, Value: 1}})
-		res := c.FindOne(ctx, f, op)
+		res := a.collection.FindOne(ctx, f, op)
 		if res.Err() != nil {
 			return nil, res.Err()
 		}
@@ -201,6 +193,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 				"exact": false,
 				"filter": bson.M{
 					"item_type": i,
+					"rating":    r,
 				},
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
@@ -211,11 +204,14 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 			{Key: "$project", Value: bson.M{
 				"text_vector":  0,
 				"image_vector": 0,
+				"item_type":    0,
+				"rating":       0,
+				"description":  0,
 			}},
 		},
 	}
 	op := options.Aggregate().SetMaxAwaitTime(time.Second)
-	stream, err := c.Aggregate(ctx, p, op)
+	stream, err := a.collection.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
 	}
@@ -225,10 +221,9 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 		return nil, err
 	}
 
-	r := documents.QueryResult{
+	b, err := a.encoder.Marshal(documents.QueryResult{
 		Candidates: candidates,
-	}
-	b, err := a.encoder.Marshal(r)
+	})
 	if err != nil {
 		return nil, err
 	}

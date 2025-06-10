@@ -6,15 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type ItemType int32
-
-const (
-	ITEM_TYPE_UNSPECIFIED ItemType = iota
-	ITEM_TYPE_ANIME
-	ITEM_TYPE_CHARACTER
-)
-const ITEM_TYPE_MAX = ITEM_TYPE_CHARACTER
-
 type Parent struct {
 	Id           bson.ObjectID `json:"id" bson:"id" msgpack:"id"`
 	Name         string        `json:"name" bson:"name" msgpack:"name"`
@@ -26,7 +17,6 @@ func (p Parent) IsZero() bool {
 }
 
 type Candidate struct {
-	ItemType     ItemType `json:"item_type,omitempty" bson:"item_type,omitempty" msgpack:"item_type,omitempty"`
 	Url          string   `json:"url" bson:"url" msgpack:"url"`
 	Parent       Parent   `json:"parent,omitzero" bson:"parent,omitempty" msgpack:"parent,omitempty"`
 	Name         string   `json:"name" bson:"name" msgpack:"name"`

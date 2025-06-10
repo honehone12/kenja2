@@ -9,8 +9,9 @@ import (
 )
 
 type mongoClient struct {
-	client   *mongo.Client
-	database *mongo.Database
+	client     *mongo.Client
+	database   *mongo.Database
+	collection *mongo.Collection
 }
 
 func connect(uri string) (mongoClient, error) {
@@ -29,24 +30,15 @@ func connect(uri string) (mongoClient, error) {
 
 	database := client.Database(db)
 
+	coll := os.Getenv("MONGO_COLLECTION")
+	if len(coll) == 0 {
+		return c, errors.New("env for collection is not set")
+	}
+
+	collection := database.Collection(coll)
+
 	c.client = client
 	c.database = database
+	c.collection = collection
 	return c, nil
-}
-
-type collections struct {
-	allAges *mongo.Collection
-}
-
-func newCollections(database *mongo.Database) (collections, error) {
-	coll := collections{}
-
-	all := os.Getenv("COLLECTION_ALL_AGES")
-	if len(all) == 0 {
-		return coll, errors.New("env for collection all ages is not set")
-	}
-	allAges := database.Collection(all)
-
-	coll.allAges = allAges
-	return coll, nil
 }

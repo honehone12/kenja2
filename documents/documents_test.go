@@ -15,7 +15,6 @@ var _ bson.Zeroer = Parent{}
 
 func TestDocuments(t *testing.T) {
 	s := `{
-		"item_type": 1,
 		"url": "test.kenja",
 		"parent": {
 			"id": "000000000000000000000001",
@@ -30,9 +29,6 @@ func TestDocuments(t *testing.T) {
 	c := Candidate{}
 	if err := json.Unmarshal([]byte(s), &c); err != nil {
 		panic(err)
-	}
-	if c.ItemType != 1 {
-		panic("decoded wrong item type")
 	}
 	if c.Url != "test.kenja" {
 		panic("decoded wrong url")
@@ -54,7 +50,6 @@ func TestDocuments(t *testing.T) {
 	}
 
 	s = `{
-		"item_type": 1,
 		"url": "test.kenja",
 		"parent": {
 			"id": "000000000000000000000001",
@@ -95,8 +90,7 @@ func TestParentIsZero(t *testing.T) {
 func TestDocumentsMsgPack(t *testing.T) {
 	id := bson.NewObjectID()
 	c := Candidate{
-		ItemType: 1,
-		Url:      "kenja.test",
+		Url: "kenja.test",
 		Parent: Parent{
 			Id:           id,
 			Name:         "Test",
@@ -115,9 +109,6 @@ func TestDocumentsMsgPack(t *testing.T) {
 	c = Candidate{}
 	if err := msgpack.Unmarshal(b, &c); err != nil {
 		panic(err)
-	}
-	if c.ItemType != 1 {
-		panic("decoded wrong item type")
 	}
 	if c.Url != "kenja.test" {
 		panic("decoded wrong url")
