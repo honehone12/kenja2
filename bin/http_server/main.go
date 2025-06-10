@@ -15,6 +15,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 const REQUEST_BODY_LIMIT = 1024
@@ -40,12 +42,12 @@ func env() (string, error) {
 func text(e echo.Context) error {
 	req := e.Request()
 	if req.ContentLength > REQUEST_BODY_LIMIT {
-		e.Logger().Error("content length over limit")
+		log.Error("content length over limit")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		e.Logger().Error("unexpected content type header")
+		log.Error("unexpected content type header")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 
@@ -53,13 +55,13 @@ func text(e echo.Context) error {
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		e.Logger().Error(err)
+		log.Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
 	b, err := __ENGINE.TextSearch(ctx, body)
 	if err != nil {
-		e.Logger().Error(err)
+		log.Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
@@ -73,12 +75,12 @@ func text(e echo.Context) error {
 func vector(e echo.Context) error {
 	req := e.Request()
 	if req.ContentLength > REQUEST_BODY_LIMIT {
-		e.Logger().Error("content length over limit")
+		log.Error("content length over limit")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		e.Logger().Error("unexpected content type header")
+		log.Error("unexpected content type header")
 		return e.String(http.StatusBadRequest, "bad request")
 	}
 
@@ -86,13 +88,13 @@ func vector(e echo.Context) error {
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		e.Logger().Error(err)
+		log.Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
 	b, err := __ENGINE.VectorSeach(ctx, body)
 	if err != nil {
-		e.Logger().Error(err)
+		log.Error(err)
 		return e.String(http.StatusInternalServerError, "internal error")
 	}
 
@@ -105,10 +107,14 @@ func vector(e echo.Context) error {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Logger.SetLevel(log.INFO)
+	e.Logger.SetPrefix("KENJA")
+
 	port := args()
 	engineUri, err := env()
 	if err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 
 	ctx := context.Background()
@@ -118,11 +124,11 @@ func main() {
 		endec.NewJson(),
 	)
 	if err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 	defer func() {
 		if err := __ENGINE.Close(ctx); err != nil {
-			e.Logger.Error(err)
+			log.Error(err)
 		}
 	}()
 
@@ -130,8 +136,7 @@ func main() {
 	e.GET("/vector", vector)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
-	e.Logger.Infof("started listening at %s\n", listenAt)
 	if err := e.Start(listenAt); err != nil {
-		e.Logger.Error(err)
+		log.Error(err)
 	}
 }
