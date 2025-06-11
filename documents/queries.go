@@ -72,5 +72,5 @@ type VectorQuery struct {
 }
 
 type QueryResult struct {
-	Candidates []Candidate `json:"result,omitempty" msgpack:"result,omitempty"`
+	Candidates []Candidate `json:"candidates,omitempty" msgpack:"candidates,omitempty"`
 }
