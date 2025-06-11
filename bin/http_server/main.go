@@ -38,14 +38,14 @@ func responseInternalError(e echo.Context) error {
 	return e.String(http.StatusInternalServerError, "internal error")
 }
 
-func checkBody(req *http.Request) error {
+func checkBodyLimit(req *http.Request) error {
 	if req.ContentLength > REQUEST_BODY_LIMIT {
 		return errors.New("content length over limit")
 	}
 	return nil
 }
 
-func checkHeader(req *http.Request) error {
+func checkHeaders(req *http.Request) error {
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != __ENGINE.Decoder().ContentType() {
 		return errors.New("unexpected content type header")
@@ -55,11 +55,11 @@ func checkHeader(req *http.Request) error {
 
 func text(e echo.Context) error {
 	req := e.Request()
-	if err := checkBody(req); err != nil {
+	if err := checkBodyLimit(req); err != nil {
 		e.Logger().Error(err)
 		return responseBadRequest(e)
 	}
-	if err := checkHeader(req); err != nil {
+	if err := checkHeaders(req); err != nil {
 		e.Logger().Error(err)
 		return responseBadRequest(e)
 	}
@@ -87,11 +87,11 @@ func text(e echo.Context) error {
 
 func vector(e echo.Context) error {
 	req := e.Request()
-	if err := checkBody(req); err != nil {
+	if err := checkBodyLimit(req); err != nil {
 		e.Logger().Error(err)
 		return responseBadRequest(e)
 	}
-	if err := checkHeader(req); err != nil {
+	if err := checkHeaders(req); err != nil {
 		e.Logger().Error(err)
 		return responseBadRequest(e)
 	}
