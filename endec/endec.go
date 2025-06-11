@@ -1,53 +1,13 @@
 package endec
 
-import (
-	"encoding/json"
-
-	"github.com/vmihailenco/msgpack/v5"
-)
-
 type Encoder interface {
 	Marshal(v any) ([]byte, error)
+	String(b []byte) string
 	ContentType() string
 }
 
 type Decoder interface {
 	Unmarshal(data []byte, v any) error
+	FromString(s string) ([]byte, error)
 	ContentType() string
-}
-
-func NewJson() Json {
-	return Json{}
-}
-
-func NewMsgPack() MsgPack {
-	return MsgPack{}
-}
-
-type Json struct{}
-
-func (j Json) Marshal(v any) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-func (j Json) Unmarshal(data []byte, v any) error {
-	return json.Unmarshal(data, v)
-}
-
-func (j Json) ContentType() string {
-	return "application/json; charset=utf8"
-}
-
-type MsgPack struct{}
-
-func (m MsgPack) Marshal(v any) ([]byte, error) {
-	return msgpack.Marshal(v)
-}
-
-func (m MsgPack) Unmarshal(data []byte, v any) error {
-	return msgpack.Unmarshal(data, v)
-}
-
-func (m MsgPack) ContentType() string {
-	return "application/messagepack"
 }

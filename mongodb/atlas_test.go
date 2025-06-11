@@ -1,11 +1,11 @@
 package mongodb
 
 import (
-	"kenja2"
 	"kenja2/endec"
+	"kenja2/engine"
 )
 
-var _ kenja2.Engine[endec.MsgPack, endec.Json] = &Atlas[
+var _ engine.Engine[endec.MsgPack, endec.Json] = &Atlas[
 	endec.MsgPack,
 	endec.Json,
 ]{

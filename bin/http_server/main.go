@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"kenja2"
 	"kenja2/endec"
-	"kenja2/mongodb"
+	"kenja2/engine"
 	"time"
 
 	"net/http"
-	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -20,8 +20,9 @@ import (
 )
 
 const REQUEST_BODY_LIMIT = 1024
+const REQUEST_TIME_LIMIT = time.Second * 3
 
-var __ENGINE kenja2.Engine[endec.Json, endec.Json]
+var __ENGINE engine.Engine[endec.Json, endec.Json]
 
 func args() uint {
 	port := flag.Uint("port", 8080, "listen port")
@@ -29,78 +30,89 @@ func args() uint {
 	return *port
 }
 
-func env() (string, error) {
-	godotenv.Load("../../.env")
-	engine_uri := os.Getenv("SEARCHENGINE_URI")
-	if len(engine_uri) == 0 {
-		return "", nil
-	}
+func responseBadRequest(e echo.Context) error {
+	return e.String(http.StatusBadRequest, "bad request")
+}
 
-	return engine_uri, nil
+func responseInternalError(e echo.Context) error {
+	return e.String(http.StatusInternalServerError, "internal error")
+}
+
+func checkBody(req *http.Request) error {
+	if req.ContentLength > REQUEST_BODY_LIMIT {
+		return errors.New("content length over limit")
+	}
+	return nil
+}
+
+func checkHeader(req *http.Request) error {
+	contentType := req.Header.Get("Content-Type")
+	if len(contentType) == 0 || contentType != __ENGINE.Decoder().ContentType() {
+		return errors.New("unexpected content type header")
+	}
+	return nil
 }
 
 func text(e echo.Context) error {
 	req := e.Request()
-	if req.ContentLength > REQUEST_BODY_LIMIT {
-		e.Logger().Error("content length over limit")
-		return e.String(http.StatusBadRequest, "bad request")
+	if err := checkBody(req); err != nil {
+		e.Logger().Error(err)
+		return responseBadRequest(e)
 	}
-	contentType := req.Header.Get("Content-Type")
-	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		e.Logger().Error("unexpected content type header")
-		return e.String(http.StatusBadRequest, "bad request")
+	if err := checkHeader(req); err != nil {
+		e.Logger().Error(err)
+		return responseBadRequest(e)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), REQUEST_TIME_LIMIT)
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		e.Logger().Error(err)
-		return e.String(http.StatusInternalServerError, "internal error")
+		return responseInternalError(e)
 	}
 
 	b, err := __ENGINE.TextSearch(ctx, body)
 	if err != nil {
 		e.Logger().Error(err)
-		return e.String(http.StatusInternalServerError, "internal error")
+		return responseInternalError(e)
 	}
 
 	return e.Blob(
 		http.StatusOK,
-		__ENGINE.ResponseContentType(),
+		__ENGINE.Encoder().ContentType(),
 		b,
 	)
 }
 
 func vector(e echo.Context) error {
 	req := e.Request()
-	if req.ContentLength > REQUEST_BODY_LIMIT {
-		e.Logger().Error("content length over limit")
-		return e.String(http.StatusBadRequest, "bad request")
+	if err := checkBody(req); err != nil {
+		e.Logger().Error(err)
+		return responseBadRequest(e)
 	}
-	contentType := req.Header.Get("Content-Type")
-	if len(contentType) == 0 || contentType != __ENGINE.RequestContentType() {
-		e.Logger().Error("unexpected content type header")
-		return e.String(http.StatusBadRequest, "bad request")
+	if err := checkHeader(req); err != nil {
+		e.Logger().Error(err)
+		return responseBadRequest(e)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), REQUEST_TIME_LIMIT)
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		e.Logger().Error(err)
-		return e.String(http.StatusInternalServerError, "internal error")
+		return responseInternalError(e)
 	}
 
 	b, err := __ENGINE.VectorSeach(ctx, body)
 	if err != nil {
 		e.Logger().Error(err)
-		return e.String(http.StatusInternalServerError, "internal error")
+		return responseInternalError(e)
 	}
 
 	return e.Blob(
 		http.StatusOK,
-		__ENGINE.ResponseContentType(),
+		__ENGINE.Encoder().ContentType(),
 		b,
 	)
 }
@@ -111,17 +123,16 @@ func main() {
 	e.Logger.SetLevel(log.INFO)
 	e.Logger.SetPrefix("KENJA2")
 
-	port := args()
-	engineUri, err := env()
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
 
+	port := args()
 	ctx := context.Background()
-	__ENGINE, err = mongodb.Connect(
-		engineUri,
-		endec.NewJson(),
-		endec.NewJson(),
+	__ENGINE, err = kenja2.ConnectAtlas(
+		kenja2.NewJson(),
+		kenja2.NewJson(),
 	)
 	if err != nil {
 		e.Logger.Fatal(err)

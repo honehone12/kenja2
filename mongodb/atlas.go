@@ -15,6 +15,7 @@ import (
 const ATLAS_SEARCH_SIZE = 50
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
+const ATLAS_CURSOR_MAX_AWAIT = time.Second
 
 type Atlas[E endec.Encoder, D endec.Decoder] struct {
 	mongoClient
@@ -39,12 +40,12 @@ func Connect[E endec.Encoder, D endec.Decoder](
 	}, nil
 }
 
-func (a *Atlas[E, D]) RequestContentType() string {
-	return a.decoder.ContentType()
+func (a *Atlas[E, D]) Encoder() endec.Encoder {
+	return a.encoder
 }
 
-func (a *Atlas[E, D]) ResponseContentType() string {
-	return a.encoder.ContentType()
+func (a *Atlas[E, D]) Decoder() endec.Decoder {
+	return a.decoder
 }
 
 func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, error) {
@@ -111,7 +112,7 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 	)
 
-	op := options.Aggregate().SetMaxAwaitTime(time.Second)
+	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
 	stream, err := a.collection.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
@@ -213,7 +214,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 			}},
 		},
 	}
-	op := options.Aggregate().SetMaxAwaitTime(time.Second)
+	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
 	stream, err := a.collection.Aggregate(ctx, p, op)
 	if err != nil {
 		return nil, err
