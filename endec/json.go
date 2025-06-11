@@ -15,11 +15,3 @@ func (j Json) Unmarshal(data []byte, v any) error {
 func (j Json) ContentType() string {
 	return "application/json; charset=utf-8"
 }
-
-func (j Json) String(b []byte) string {
-	return string(b)
-}
-
-func (j Json) FromString(s string) ([]byte, error) {
-	return []byte(s), nil
-}
