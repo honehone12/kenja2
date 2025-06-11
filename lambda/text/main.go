@@ -19,7 +19,12 @@ func handler(ctx context.Context, req []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return __ENGINE.TextSearch(ctx, req)
+	res, err := __ENGINE.TextSearch(ctx, req)
+	if err != nil {
+		logs.Error(err)
+		return nil, err
+	}
+	return res, nil
 }
 
 func main() {

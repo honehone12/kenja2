@@ -19,7 +19,12 @@ func handler(ctx context.Context, req []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return __ENGINE.VectorSeach(ctx, req)
+	res, err := __ENGINE.VectorSeach(ctx, req)
+	if err != nil {
+		logs.Error(err)
+		return nil, err
+	}
+	return res, nil
 }
 
 func main() {
