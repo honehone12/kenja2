@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"kenja2"
-	"kenja2/endec"
 	"kenja2/engine"
 	"time"
 
@@ -22,7 +21,7 @@ import (
 const REQUEST_BODY_LIMIT = 1024
 const REQUEST_TIME_LIMIT = time.Second * 3
 
-var __ENGINE engine.Engine[endec.Json, endec.Json]
+var __ENGINE engine.Engine
 
 func args() uint {
 	port := flag.Uint("port", 8080, "listen port")

@@ -5,10 +5,7 @@ import (
 	"kenja2/engine"
 )
 
-var _ engine.Engine[endec.MsgPack, endec.Json] = &Atlas[
-	endec.MsgPack,
-	endec.Json,
-]{
+var _ engine.Engine = &Atlas[endec.MsgPack, endec.Json]{
 	encoder: endec.MsgPack{},
 	decoder: endec.Json{},
 }

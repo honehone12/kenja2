@@ -19,7 +19,7 @@ func NewMsgPack() endec.MsgPack {
 func ConnectAtlas[E endec.Encoder, D endec.Decoder](
 	encoder E,
 	decoder D,
-) (engine.Engine[E, D], error) {
+) (engine.Engine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
 		return nil, errors.New("env for search engine uri is not set")
