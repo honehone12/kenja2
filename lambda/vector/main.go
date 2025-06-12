@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"kenja2"
-	"kenja2/endec"
 	"kenja2/engine"
 	kenja2lambda "kenja2/lambda"
 	"kenja2/lambda/logs"
@@ -11,7 +10,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-var __ENGINE engine.Engine[endec.Json, endec.Json]
+var __ENGINE engine.Engine
 
 func handler(ctx context.Context, req []byte) ([]byte, error) {
 	if err := kenja2lambda.CheckBodyLimit(req); err != nil {
