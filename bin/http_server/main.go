@@ -142,8 +142,8 @@ func main() {
 		}
 	}()
 
-	e.GET("/text", text)
-	e.GET("/vector", vector)
+	e.POST("/text", text)
+	e.POST("/vector", vector)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {
