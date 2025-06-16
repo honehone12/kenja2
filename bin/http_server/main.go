@@ -19,7 +19,7 @@ import (
 )
 
 const REQUEST_BODY_LIMIT = 1024
-const REQUEST_TIME_LIMIT = time.Second * 3
+const REQUEST_TIME_LIMIT = time.Second * 10
 
 var __ENGINE engine.Engine
 
