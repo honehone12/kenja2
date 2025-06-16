@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"kenja2/documents"
-	"kenja2/endec"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -17,42 +17,45 @@ const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
 const ATLAS_CURSOR_MAX_AWAIT = time.Second
 
-type Atlas[E endec.Encoder, D endec.Decoder] struct {
-	mongoClient
-	encoder E
-	decoder D
+type atlasClient struct {
+	client     *mongo.Client
+	database   *mongo.Database
+	collection *mongo.Collection
 }
 
-func Connect[E endec.Encoder, D endec.Decoder](
-	uri string,
-	encoder E,
-	decoder D,
-) (*Atlas[E, D], error) {
-	mongoClient, err := connect(uri)
+func connect(uri string) (atlasClient, error) {
+	a := atlasClient{}
+
+	db := os.Getenv("MONGO_DB_NAME")
+	if len(db) == 0 {
+		return a, errors.New("env for db name is not set")
+	}
+
+	ops := options.Client().ApplyURI(uri)
+	client, err := mongo.Connect(ops)
 	if err != nil {
-		return nil, err
+		return a, err
 	}
 
-	return &Atlas[E, D]{
-		mongoClient,
-		encoder,
-		decoder,
-	}, nil
-}
+	database := client.Database(db)
 
-func (a *Atlas[E, D]) Encoder() endec.Encoder {
-	return a.encoder
-}
-
-func (a *Atlas[E, D]) Decoder() endec.Decoder {
-	return a.decoder
-}
-
-func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, error) {
-	q := documents.TextQuery{}
-	if err := a.decoder.Unmarshal(input, &q); err != nil {
-		return nil, err
+	coll := os.Getenv("MONGO_COLLECTION")
+	if len(coll) == 0 {
+		return a, errors.New("env for collection is not set")
 	}
+
+	collection := database.Collection(coll)
+
+	a.client = client
+	a.database = database
+	a.collection = collection
+	return a, nil
+}
+
+func (a *atlasClient) textSearch(
+	ctx context.Context,
+	q documents.TextQuery,
+) (*mongo.Cursor, error) {
 	if len(q.Keywords) > ATLAS_KW_LIMIT {
 		return nil, errors.New("unexpected keywords length")
 	}
@@ -113,31 +116,13 @@ func (a *Atlas[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, err
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
-	stream, err := a.collection.Aggregate(ctx, p, op)
-	if err != nil {
-		return nil, err
-	}
-
-	var candidates []documents.Candidate
-	if err := stream.All(ctx, &candidates); err != nil {
-		return nil, err
-	}
-
-	b, err := a.encoder.Marshal(documents.QueryResult{
-		Candidates: candidates,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return b, err
+	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, error) {
-	q := documents.VectorQuery{}
-	if err := a.decoder.Unmarshal(input, &q); err != nil {
-		return nil, err
-	}
+func (a *atlasClient) vectorSearch(
+	ctx context.Context,
+	q documents.VectorQuery,
+) (*mongo.Cursor, error) {
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
@@ -214,27 +199,7 @@ func (a *Atlas[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, er
 			}},
 		},
 	}
+
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
-	stream, err := a.collection.Aggregate(ctx, p, op)
-	if err != nil {
-		return nil, err
-	}
-
-	var candidates []documents.Candidate
-	if err := stream.All(ctx, &candidates); err != nil {
-		return nil, err
-	}
-
-	b, err := a.encoder.Marshal(documents.QueryResult{
-		Candidates: candidates,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return b, err
-}
-
-func (a *Atlas[E, D]) Close(ctx context.Context) error {
-	return a.client.Disconnect(ctx)
+	return a.collection.Aggregate(ctx, p, op)
 }
