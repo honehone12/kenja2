@@ -52,7 +52,7 @@ func checkHeaders(req *http.Request) error {
 	return nil
 }
 
-func text(e echo.Context) error {
+func textSearch(e echo.Context) error {
 	req := e.Request()
 	if err := checkBodyLimit(req); err != nil {
 		e.Logger().Error(err)
@@ -84,7 +84,7 @@ func text(e echo.Context) error {
 	)
 }
 
-func vector(e echo.Context) error {
+func vectorSearch(e echo.Context) error {
 	req := e.Request()
 	if err := checkBodyLimit(req); err != nil {
 		e.Logger().Error(err)
@@ -142,8 +142,8 @@ func main() {
 		}
 	}()
 
-	e.POST("/text", text)
-	e.POST("/vector", vector)
+	e.POST("/search/buffer/text", textSearch)
+	e.POST("/search/buffer/vector", vectorSearch)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {
