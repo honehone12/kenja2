@@ -63,7 +63,7 @@ func textSearch(e echo.Context) error {
 		return responseBadRequest(e)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), REQUEST_TIME_LIMIT)
+	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -95,7 +95,7 @@ func vectorSearch(e echo.Context) error {
 		return responseBadRequest(e)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), REQUEST_TIME_LIMIT)
+	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
 	defer cancel()
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
