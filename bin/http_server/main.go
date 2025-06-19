@@ -76,8 +76,6 @@ func handler(f engineFunc) handlerFunc {
 			return responseInternalError(e)
 		}
 
-		e.Logger().Infof("%#v", b)
-
 		return e.Blob(
 			http.StatusOK,
 			__ENGINE.Encoder().ContentType(),
