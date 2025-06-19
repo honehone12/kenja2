@@ -8,6 +8,7 @@ import (
 type Engine interface {
 	TextSearch(ctx context.Context, input []byte) ([]byte, error)
 	VectorSeach(ctx context.Context, input []byte) ([]byte, error)
+	Document(ctx context.Context, input []byte) ([]byte, error)
 	Encoder() endec.Encoder
 	Decoder() endec.Decoder
 	Close(ctx context.Context) error

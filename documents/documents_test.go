@@ -15,7 +15,7 @@ var _ bson.Zeroer = Parent{}
 
 func TestDocuments(t *testing.T) {
 	s := `{
-		"url": "test.kenja",
+		"id": "000000000000000000000000",
 		"parent": {
 			"id": "000000000000000000000001",
 			"name": "Test Parent",
@@ -30,18 +30,13 @@ func TestDocuments(t *testing.T) {
 	if err := json.Unmarshal([]byte(s), &c); err != nil {
 		panic(err)
 	}
-	if c.Url != "test.kenja" {
-		panic("decoded wrong url")
-	}
+
 	oid := bson.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
-	if !bytes.Equal(oid[:], c.Parent.Id[:]) || c.Parent.Name != "Test Parent" || c.Parent.NameJapanese != "" {
+	if oid.Hex() != c.Parent.IdHex || c.Parent.Name != "Test Parent" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
 	}
 	if c.Name != "Test Data" || c.NameEnglish != "Test Name" || c.NameJapanese != "" {
 		panic("decoded wrong names")
-	}
-	if c.Aliases != nil {
-		panic("decoded wrong aliases")
 	}
 
 	b, err := json.MarshalIndent(c, "\t", "\t")
@@ -50,7 +45,7 @@ func TestDocuments(t *testing.T) {
 	}
 
 	s = `{
-		"url": "test.kenja",
+		"id": "000000000000000000000000",
 		"parent": {
 			"id": "000000000000000000000001",
 			"name": "Test Parent"
@@ -64,8 +59,7 @@ func TestDocuments(t *testing.T) {
 	}
 
 	s = `{
-		"item_type": 1,
-		"url": "test.kenja",
+		"id": "000000000000000000000000",
 		"name": "Test Data",
 		"name_english": "Test Name"
 	}`
@@ -90,7 +84,6 @@ func TestParentIsZero(t *testing.T) {
 func TestDocumentsMsgPack(t *testing.T) {
 	id := bson.NewObjectID()
 	c := Candidate{
-		Url: "kenja.test",
 		Parent: Parent{
 			Id:           id,
 			Name:         "Test",
@@ -99,8 +92,8 @@ func TestDocumentsMsgPack(t *testing.T) {
 		Name:         "Test",
 		NameEnglish:  "Test",
 		NameJapanese: "",
-		Aliases:      []string{"Test"},
 	}
+	c.FillIdHex()
 	b, err := msgpack.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -110,21 +103,14 @@ func TestDocumentsMsgPack(t *testing.T) {
 	if err := msgpack.Unmarshal(b, &c); err != nil {
 		panic(err)
 	}
-	if c.Url != "kenja.test" {
-		panic("decoded wrong url")
-	}
-	if !bytes.Equal(c.Parent.Id[:], id[:]) || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
+	if c.Parent.IdHex != id.Hex() || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
 	}
 	if c.Name != "Test" || c.NameEnglish != "Test" || c.NameJapanese != "" {
 		panic("decoded wrong names")
 	}
-	if len(c.Aliases) != 1 || c.Aliases[0] != "Test" {
-		panic("decoded wrong aliases")
-	}
 
 	c.Parent = Parent{}
-	c.Aliases = nil
 	b, err = msgpack.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -136,9 +122,6 @@ func TestDocumentsMsgPack(t *testing.T) {
 	}
 	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
-	}
-	if c.Aliases != nil {
-		panic("decoded wrong aliases")
 	}
 }
 
@@ -160,6 +143,7 @@ func TestQueries(t *testing.T) {
 	q.Keywords = "muku muku"
 	s = `{
 		"rating": 2,
+		"item_type": 0,
 		"keywords": "muku muku"
 	}`
 	b, err := json.MarshalIndent(q, "\t", "\t")
@@ -186,7 +170,7 @@ func TestQueriesMsgPack(t *testing.T) {
 	if err = msgpack.Unmarshal(b, &q); err != nil {
 		panic(err)
 	}
-	if q.Rating != 1 || q.Keywords != "miku miku" {
+	if q.Rating != 1 || q.ItemType != 0 || q.Keywords != "miku miku" {
 		panic("decoded wrong rating")
 	}
 }

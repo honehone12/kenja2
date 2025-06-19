@@ -37,6 +37,27 @@ func (a *AtlasBuffer[E, D]) Decoder() endec.Decoder {
 	return a.decoder
 }
 
+func (a *AtlasBuffer[E, D]) Document(ctx context.Context, input []byte) ([]byte, error) {
+	q := documents.DocumentQuery{}
+	if err := a.decoder.Unmarshal(input, &q); err != nil {
+		return nil, err
+	}
+
+	res, err := a.document(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	d := documents.Document{}
+	if err := res.Decode(&d); err != nil {
+		return nil, err
+	}
+
+	d.Candidate.FillIdHex()
+
+	return a.encoder.Marshal(d)
+}
+
 func (a *AtlasBuffer[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, error) {
 	q := documents.TextQuery{}
 	if err := a.decoder.Unmarshal(input, &q); err != nil {
@@ -57,14 +78,9 @@ func (a *AtlasBuffer[E, D]) TextSearch(ctx context.Context, input []byte) ([]byt
 		candidates[i].FillIdHex()
 	}
 
-	b, err := a.encoder.Marshal(documents.QueryResult{
+	return a.encoder.Marshal(documents.QueryResult{
 		Candidates: candidates,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return b, err
 }
 
 func (a *AtlasBuffer[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, error) {
@@ -87,14 +103,9 @@ func (a *AtlasBuffer[E, D]) VectorSeach(ctx context.Context, input []byte) ([]by
 		candidates[i].FillIdHex()
 	}
 
-	b, err := a.encoder.Marshal(documents.QueryResult{
+	return a.encoder.Marshal(documents.QueryResult{
 		Candidates: candidates,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return b, err
 }
 
 func (a *AtlasBuffer[E, D]) Close(ctx context.Context) error {

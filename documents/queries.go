@@ -57,6 +57,10 @@ func (i ItemType) I32() (int32, error) {
 	return i32, nil
 }
 
+type DocumentQuery struct {
+	Id string `json:"id" msgpack:"id"`
+}
+
 type TextQuery struct {
 	Rating   Rating   `json:"rating" msgpack:"rating"`
 	ItemType ItemType `json:"item_type" msgpack:"item_type"`

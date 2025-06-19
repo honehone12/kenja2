@@ -18,16 +18,13 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+type handlerFunc = func(echo.Context) error
+type engineFunc = func(context.Context, []byte) ([]byte, error)
+
 const REQUEST_BODY_LIMIT = 1024
 const REQUEST_TIME_LIMIT = time.Second * 10
 
 var __ENGINE engine.Engine
-
-func args() uint {
-	port := flag.Uint("port", 8080, "listen port")
-	flag.Parse()
-	return *port
-}
 
 func responseBadRequest(e echo.Context) error {
 	return e.String(http.StatusBadRequest, "bad request")
@@ -52,68 +49,45 @@ func checkHeaders(req *http.Request) error {
 	return nil
 }
 
-func textSearch(e echo.Context) error {
-	req := e.Request()
-	if err := checkBodyLimit(req); err != nil {
-		e.Logger().Error(err)
-		return responseBadRequest(e)
-	}
-	if err := checkHeaders(req); err != nil {
-		e.Logger().Error(err)
-		return responseBadRequest(e)
-	}
+func handler(f engineFunc) handlerFunc {
+	return func(e echo.Context) error {
+		req := e.Request()
+		if err := checkBodyLimit(req); err != nil {
+			e.Logger().Error(err)
+			return responseBadRequest(e)
+		}
+		if err := checkHeaders(req); err != nil {
+			e.Logger().Error(err)
+			return responseBadRequest(e)
+		}
 
-	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
-	defer cancel()
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		e.Logger().Error(err)
-		return responseInternalError(e)
-	}
+		ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
+		defer cancel()
 
-	b, err := __ENGINE.TextSearch(ctx, body)
-	if err != nil {
-		e.Logger().Error(err)
-		return responseInternalError(e)
-	}
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			e.Logger().Error(err)
+			return responseInternalError(e)
+		}
 
-	return e.Blob(
-		http.StatusOK,
-		__ENGINE.Encoder().ContentType(),
-		b,
-	)
+		b, err := f(ctx, body)
+		if err != nil {
+			e.Logger().Error(err)
+			return responseInternalError(e)
+		}
+
+		return e.Blob(
+			http.StatusOK,
+			__ENGINE.Encoder().ContentType(),
+			b,
+		)
+	}
 }
 
-func vectorSearch(e echo.Context) error {
-	req := e.Request()
-	if err := checkBodyLimit(req); err != nil {
-		e.Logger().Error(err)
-		return responseBadRequest(e)
-	}
-	if err := checkHeaders(req); err != nil {
-		e.Logger().Error(err)
-		return responseBadRequest(e)
-	}
-
-	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
-	defer cancel()
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		e.Logger().Error(err)
-		return responseInternalError(e)
-	}
-
-	b, err := __ENGINE.VectorSeach(ctx, body)
-	if err != nil {
-		e.Logger().Error(err)
-		return responseInternalError(e)
-	}
-
-	return e.Blob(
-		http.StatusOK,
-		__ENGINE.Encoder().ContentType(),
-		b,
-	)
+func args() uint {
+	port := flag.Uint("port", 8080, "listen port")
+	flag.Parse()
+	return *port
 }
 
 func main() {
@@ -142,8 +116,9 @@ func main() {
 		}
 	}()
 
-	e.POST("/search/buffer/text", textSearch)
-	e.POST("/search/buffer/vector", vectorSearch)
+	e.GET("/document", handler(__ENGINE.Document))
+	e.POST("/search/buffer/text", handler(__ENGINE.TextSearch))
+	e.POST("/search/buffer/vector", handler(__ENGINE.VectorSeach))
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {

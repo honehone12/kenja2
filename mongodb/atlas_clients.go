@@ -52,6 +52,31 @@ func connect(uri string) (atlasClient, error) {
 	return a, nil
 }
 
+func (a *atlasClient) document(
+	ctx context.Context,
+	q documents.DocumentQuery,
+) (*mongo.SingleResult, error) {
+	id, err := bson.ObjectIDFromHex(q.Id)
+	if err != nil {
+		return nil, err
+	}
+	f := bson.M{"_id": id}
+	op := options.FindOne().SetProjection(bson.M{
+		"text_vector":  0,
+		"image_vector": 0,
+		"item_type":    0,
+		"rating":       0,
+		"description":  0,
+	})
+
+	res := a.collection.FindOne(ctx, f, op)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return res, nil
+}
+
 func (a *atlasClient) textSearch(
 	ctx context.Context,
 	q documents.TextQuery,
@@ -113,6 +138,10 @@ func (a *atlasClient) textSearch(
 
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
+		bson.D{{Key: "$project", Value: bson.M{
+			"item_type": 0,
+			"rating":    0,
+		}}},
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
@@ -193,9 +222,11 @@ func (a *atlasClient) vectorSearch(
 			{Key: "$project", Value: bson.M{
 				"text_vector":  0,
 				"image_vector": 0,
+				"url":          0,
 				"item_type":    0,
 				"rating":       0,
 				"description":  0,
+				"aliases":      0,
 			}},
 		},
 	}
