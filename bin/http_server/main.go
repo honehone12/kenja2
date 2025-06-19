@@ -116,7 +116,7 @@ func main() {
 		}
 	}()
 
-	e.GET("/document", handler(__ENGINE.Document))
+	e.POST("/document", handler(__ENGINE.Document))
 	e.POST("/search/buffer/text", handler(__ENGINE.TextSearch))
 	e.POST("/search/buffer/vector", handler(__ENGINE.VectorSeach))
 
