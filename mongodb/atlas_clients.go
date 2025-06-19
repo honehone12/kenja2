@@ -60,6 +60,7 @@ func (a *atlasClient) document(
 	if err != nil {
 		return nil, err
 	}
+
 	f := bson.M{"_id": id}
 	op := options.FindOne().SetProjection(bson.M{
 		"text_vector":  0,

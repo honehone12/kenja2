@@ -48,12 +48,12 @@ func (a *AtlasBuffer[E, D]) Document(ctx context.Context, input []byte) ([]byte,
 		return nil, err
 	}
 
-	d := documents.Document{}
+	d := documents.SingleDocument{}
 	if err := res.Decode(&d); err != nil {
 		return nil, err
 	}
 
-	d.Candidate.FillIdHex()
+	d.FillIdHex()
 
 	return a.encoder.Marshal(d)
 }
@@ -78,7 +78,7 @@ func (a *AtlasBuffer[E, D]) TextSearch(ctx context.Context, input []byte) ([]byt
 		candidates[i].FillIdHex()
 	}
 
-	return a.encoder.Marshal(documents.QueryResult{
+	return a.encoder.Marshal(documents.SearchResult{
 		Candidates: candidates,
 	})
 }
@@ -103,7 +103,7 @@ func (a *AtlasBuffer[E, D]) VectorSeach(ctx context.Context, input []byte) ([]by
 		candidates[i].FillIdHex()
 	}
 
-	return a.encoder.Marshal(documents.QueryResult{
+	return a.encoder.Marshal(documents.SearchResult{
 		Candidates: candidates,
 	})
 }

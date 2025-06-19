@@ -177,7 +177,7 @@ func TestQueriesMsgPack(t *testing.T) {
 
 func TestJsonBsonMsgPack(t *testing.T) {
 	d := make([]Candidate, 10000)
-	r := QueryResult{Candidates: d}
+	r := SearchResult{Candidates: d}
 
 	now1 := time.Now()
 
@@ -185,7 +185,7 @@ func TestJsonBsonMsgPack(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	rj := QueryResult{}
+	rj := SearchResult{}
 	if err = json.Unmarshal(jb, &rj); err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func TestJsonBsonMsgPack(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	rb := QueryResult{}
+	rb := SearchResult{}
 	if err = bson.Unmarshal(bb, &rb); err != nil {
 		panic(err)
 	}
@@ -211,7 +211,7 @@ func TestJsonBsonMsgPack(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	rm := QueryResult{}
+	rm := SearchResult{}
 	if err = msgpack.Unmarshal(mb, &rm); err != nil {
 		panic(err)
 	}

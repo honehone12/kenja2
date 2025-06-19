@@ -6,10 +6,24 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type Document struct {
-	Candidate
-	Url     string   `json:"url" bson:"url" msgpack:"url"`
-	Aliases []string `json:"aliases,omitempty" bson:"aliases" msgpack:"aliases,omitempty"`
+type SingleDocument struct {
+	Id           bson.ObjectID `json:"-" bson:"_id" msgpack:"-"`
+	IdHex        string        `json:"id" bson:"-" msgpack:"id"`
+	Parent       Parent        `json:"parent,omitzero" bson:"parent" msgpack:"parent,omitempty"`
+	Name         string        `json:"name" bson:"name" msgpack:"name"`
+	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english" msgpack:"name_english,omitempty"`
+	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese" msgpack:"name_japanese,omitempty"`
+	Url          string        `json:"url" bson:"url" msgpack:"url"`
+	Aliases      []string      `json:"aliases,omitempty" bson:"aliases" msgpack:"aliases,omitempty"`
+}
+
+// json encodes bson.ObjectId as string, but msgpack encodes as bytes
+// this ensures ObjectId is encoded as string
+func (d *SingleDocument) FillIdHex() {
+	d.IdHex = d.Id.Hex()
+	if !d.Parent.Id.IsZero() {
+		d.Parent.IdHex = d.Parent.Id.Hex()
+	}
 }
 
 type Parent struct {
@@ -39,6 +53,10 @@ func (c *Candidate) FillIdHex() {
 	if !c.Parent.Id.IsZero() {
 		c.Parent.IdHex = c.Parent.Id.Hex()
 	}
+}
+
+type SearchResult struct {
+	Candidates []Candidate `json:"candidates,omitempty" msgpack:"candidates,omitempty"`
 }
 
 type Vector struct {

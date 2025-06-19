@@ -74,7 +74,3 @@ type VectorQuery struct {
 	TargetField VectorField `json:"target_field" msgpack:"target_field"`
 	Id          string      `json:"id" msgpack:"id"`
 }
-
-type QueryResult struct {
-	Candidates []Candidate `json:"candidates,omitempty" msgpack:"candidates,omitempty"`
-}
