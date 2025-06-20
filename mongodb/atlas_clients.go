@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const ATLAS_SEARCH_SIZE = 50
+const ATLAS_SEARCH_SIZE = 100
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
 const ATLAS_CURSOR_MAX_AWAIT = time.Second
