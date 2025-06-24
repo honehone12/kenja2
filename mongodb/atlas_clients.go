@@ -144,7 +144,6 @@ func (a *atlasClient) textSearch(
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: bson.M{
-			"_id":           1,
 			"parent":        1,
 			"name":          1,
 			"name_japanese": 1,
@@ -227,7 +226,6 @@ func (a *atlasClient) vectorSearch(
 		},
 		{
 			{Key: "$project", Value: bson.M{
-				"_id":           1,
 				"parent":        1,
 				"name":          1,
 				"name_japanese": 1,
