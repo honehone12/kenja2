@@ -198,7 +198,7 @@ func (a *atlasClient) vectorSearch(
 			return nil, err
 		}
 
-		srcVec, err = v.BinaryField(q.SourceField)
+		srcVec, err = v.Binary(q.SourceField)
 		if err != nil {
 			return nil, err
 		}

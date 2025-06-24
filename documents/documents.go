@@ -73,7 +73,7 @@ type Vector struct {
 	StaffVector bson.Vector `bson:"staff_vector"`
 }
 
-func (v *Vector) BinaryField(field VectorField) (bson.Binary, error) {
+func (v *Vector) Binary(field VectorField) (bson.Binary, error) {
 	var b bson.Binary
 	switch field {
 	case VFIELD_TXT:
@@ -91,4 +91,28 @@ func (v *Vector) BinaryField(field VectorField) (bson.Binary, error) {
 	}
 
 	return b, nil
+}
+
+func (v *Vector) Float32Array(field VectorField) ([]float32, error) {
+	var f []float32
+	var ok bool
+	switch field {
+	case VFIELD_TXT:
+		f, ok = v.TextVector.Float32OK()
+	case VFIELD_IMG:
+		f, ok = v.ImageVector.Float32OK()
+	case VFIELD_STF:
+		f, ok = v.StaffVector.Float32OK()
+	default:
+		return nil, errors.New("unexpected field")
+	}
+
+	if len(f) == 0 {
+		return nil, errors.New("specified field is empty")
+	}
+	if !ok {
+		return nil, errors.New("failed to convert to float32 array")
+	}
+
+	return f, nil
 }
