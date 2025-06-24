@@ -14,16 +14,21 @@ type SingleDocument struct {
 	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english" msgpack:"name_english,omitempty"`
 	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese" msgpack:"name_japanese,omitempty"`
 	Url          string        `json:"url" bson:"url" msgpack:"url"`
+	Studios      []string      `json:"studios,omitempty" bson:"studios" msgpack:"studios,omitempty"`
 	Aliases      []string      `json:"aliases,omitempty" bson:"aliases" msgpack:"aliases,omitempty"`
 }
 
 // json encodes bson.ObjectId as string, but msgpack encodes as bytes
 // this ensures ObjectId is encoded as string
-func (d *SingleDocument) FillIdHex() {
+func (d *SingleDocument) fillIdHex() {
 	d.IdHex = d.Id.Hex()
 	if !d.Parent.Id.IsZero() {
 		d.Parent.IdHex = d.Parent.Id.Hex()
 	}
+}
+
+func (d *SingleDocument) Format() {
+	d.fillIdHex()
 }
 
 type Parent struct {
@@ -47,11 +52,15 @@ type Candidate struct {
 
 // json encodes bson.ObjectId as string, but msgpack encodes as bytes
 // this ensures ObjectId is encoded as string
-func (c *Candidate) FillIdHex() {
+func (c *Candidate) fillIdHex() {
 	c.IdHex = c.Id.Hex()
 	if !c.Parent.Id.IsZero() {
 		c.Parent.IdHex = c.Parent.Id.Hex()
 	}
+}
+
+func (c *Candidate) Format() {
+	c.fillIdHex()
 }
 
 type SearchResult struct {

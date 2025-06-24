@@ -89,7 +89,7 @@ func TestDocumentsMsgPack(t *testing.T) {
 		Name:         "Test",
 		NameJapanese: "",
 	}
-	c.FillIdHex()
+	c.Format()
 	b, err := msgpack.Marshal(c)
 	if err != nil {
 		panic(err)
