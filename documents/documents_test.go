@@ -22,7 +22,6 @@ func TestDocuments(t *testing.T) {
 			"name_japanese": null
 		},
 		"name": "Test Data",
-		"name_english": "Test Name",
 		"name_japanese": null
 	}`
 
@@ -35,7 +34,7 @@ func TestDocuments(t *testing.T) {
 	if oid.Hex() != c.Parent.IdHex || c.Parent.Name != "Test Parent" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
 	}
-	if c.Name != "Test Data" || c.NameEnglish != "Test Name" || c.NameJapanese != "" {
+	if c.Name != "Test Data" || c.NameJapanese != "" {
 		panic("decoded wrong names")
 	}
 
@@ -50,8 +49,7 @@ func TestDocuments(t *testing.T) {
 			"id": "000000000000000000000001",
 			"name": "Test Parent"
 		},
-		"name": "Test Data",
-		"name_english": "Test Name"
+		"name": "Test Data"
 	}`
 	if !bytes.Equal(b, []byte(s)) {
 		fmt.Println(string(b))
@@ -60,8 +58,7 @@ func TestDocuments(t *testing.T) {
 
 	s = `{
 		"id": "000000000000000000000000",
-		"name": "Test Data",
-		"name_english": "Test Name"
+		"name": "Test Data"
 	}`
 	c.Parent = Parent{}
 	b, err = json.MarshalIndent(c, "\t", "\t")
@@ -90,7 +87,6 @@ func TestDocumentsMsgPack(t *testing.T) {
 			NameJapanese: "",
 		},
 		Name:         "Test",
-		NameEnglish:  "Test",
 		NameJapanese: "",
 	}
 	c.FillIdHex()
@@ -106,7 +102,7 @@ func TestDocumentsMsgPack(t *testing.T) {
 	if c.Parent.IdHex != id.Hex() || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
 		panic("decoded wrong parent")
 	}
-	if c.Name != "Test" || c.NameEnglish != "Test" || c.NameJapanese != "" {
+	if c.Name != "Test" || c.NameJapanese != "" {
 		panic("decoded wrong names")
 	}
 

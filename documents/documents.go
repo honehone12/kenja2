@@ -42,7 +42,6 @@ type Candidate struct {
 	IdHex        string        `json:"id" bson:"-" msgpack:"id"`
 	Parent       Parent        `json:"parent,omitzero" bson:"parent" msgpack:"parent,omitempty"`
 	Name         string        `json:"name" bson:"name" msgpack:"name"`
-	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english" msgpack:"name_english,omitempty"`
 	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese" msgpack:"name_japanese,omitempty"`
 }
 
