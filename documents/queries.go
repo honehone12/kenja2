@@ -26,6 +26,7 @@ const (
 	VFIELD_UNSPECIFIED VectorField = iota
 	VFIELD_TXT
 	VFIELD_IMG
+	VFIELD_STF
 )
 
 func (f VectorField) String() (string, error) {
@@ -34,6 +35,8 @@ func (f VectorField) String() (string, error) {
 		return "text_vector", nil
 	case VFIELD_IMG:
 		return "image_vector", nil
+	case VFIELD_STF:
+		return "staff_vector", nil
 	default:
 		return "", errors.New("unexpected vector fields option")
 	}

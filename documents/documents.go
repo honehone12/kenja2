@@ -70,6 +70,7 @@ type SearchResult struct {
 type Vector struct {
 	TextVector  bson.Vector `bson:"text_vector"`
 	ImageVector bson.Vector `bson:"image_vector"`
+	StaffVector bson.Vector `bson:"staff_vector"`
 }
 
 func (v *Vector) BinaryField(field VectorField) (bson.Binary, error) {
@@ -79,6 +80,8 @@ func (v *Vector) BinaryField(field VectorField) (bson.Binary, error) {
 		b = v.TextVector.Binary()
 	case VFIELD_IMG:
 		b = v.ImageVector.Binary()
+	case VFIELD_STF:
+		b = v.StaffVector.Binary()
 	default:
 		return b, errors.New("unexpected field")
 	}
