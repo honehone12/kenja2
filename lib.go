@@ -19,6 +19,7 @@ func NewMsgPack() endec.MsgPack {
 func ConnectAtlas[E endec.Encoder, D endec.Decoder](
 	encoder E,
 	decoder D,
+	logger engine.Logger,
 ) (engine.Engine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
@@ -29,5 +30,6 @@ func ConnectAtlas[E endec.Encoder, D endec.Decoder](
 		uri,
 		encoder,
 		decoder,
+		logger,
 	)
 }

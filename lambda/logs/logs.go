@@ -1,6 +1,10 @@
 package logs
 
-import "github.com/sirupsen/logrus"
+import (
+	"kenja2/engine"
+
+	"github.com/sirupsen/logrus"
+)
 
 var __LOGGER *logrus.Logger
 
@@ -15,8 +19,12 @@ func FmtPlain() {
 	__LOGGER.Formatter.(*logrus.TextFormatter).FullTimestamp = true
 }
 
-func SetLevel(level logrus.Level) {
-	__LOGGER.Level = level
+func SetLevel(level Level) {
+	__LOGGER.SetLevel(level)
+}
+
+func Logger() engine.Logger {
+	return __LOGGER
 }
 
 func lazyDefault() {

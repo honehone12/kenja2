@@ -13,11 +13,13 @@ var __ENGINE engine.Engine
 
 func main() {
 	logs.FmtDefault()
+	logs.SetLevel(logs.INFO)
 
 	var err error
 	__ENGINE, err = kenja2.ConnectAtlas(
 		kenja2.NewMsgPack(),
 		kenja2.NewMsgPack(),
+		logs.Logger(),
 	)
 	if err != nil {
 		logs.Fatal(err)

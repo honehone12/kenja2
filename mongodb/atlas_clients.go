@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"kenja2/documents"
+	"kenja2/engine"
 	"os"
 	"time"
 
@@ -21,9 +22,10 @@ type atlasClient struct {
 	client     *mongo.Client
 	database   *mongo.Database
 	collection *mongo.Collection
+	logger     engine.Logger
 }
 
-func connect(uri string) (atlasClient, error) {
+func connect(uri string, logger engine.Logger) (atlasClient, error) {
 	a := atlasClient{}
 
 	db := os.Getenv("MONGO_DB_NAME")
@@ -49,6 +51,7 @@ func connect(uri string) (atlasClient, error) {
 	a.client = client
 	a.database = database
 	a.collection = collection
+	a.logger = logger
 	return a, nil
 }
 

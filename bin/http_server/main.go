@@ -106,6 +106,7 @@ func main() {
 	__ENGINE, err = kenja2.ConnectAtlas(
 		kenja2.NewMsgPack(),
 		kenja2.NewMsgPack(),
+		e.Logger,
 	)
 	if err != nil {
 		e.Logger.Fatal(err)

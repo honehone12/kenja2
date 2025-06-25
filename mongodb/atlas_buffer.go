@@ -4,6 +4,7 @@ import (
 	"context"
 	"kenja2/documents"
 	"kenja2/endec"
+	"kenja2/engine"
 )
 
 type AtlasBuffer[E endec.Encoder, D endec.Decoder] struct {
@@ -16,8 +17,9 @@ func Connect[E endec.Encoder, D endec.Decoder](
 	uri string,
 	encoder E,
 	decoder D,
+	logger engine.Logger,
 ) (*AtlasBuffer[E, D], error) {
-	mongoClient, err := connect(uri)
+	mongoClient, err := connect(uri, logger)
 	if err != nil {
 		return nil, err
 	}
