@@ -1,36 +1,37 @@
 package mongodb
 
 import (
+	"kenja2/keywords"
 	"testing"
 )
 
-func TestKeywords(t *testing.T) {
+func TestMongoKeywords(t *testing.T) {
 	s := "$.,{}[]():;/`"
-	clean := CleanKeywords(s)
+	clean := keywords.CleanKeywords(__MONGO_REPLACER, s)
 	if clean != "" {
 		panic("replacer fail")
 	}
 
 	s = `"'`
-	clean = CleanKeywords(s)
+	clean = keywords.CleanKeywords(__MONGO_REPLACER, s)
 	if clean != "" {
 		panic("replacer fail")
 	}
 
 	s = "  a  b    c         de "
-	clean = CleanKeywords(s)
+	clean = keywords.CleanKeywords(__MONGO_REPLACER, s)
 	if clean != "a b c de" {
 		panic("replacer fail")
 	}
 
 	s = "\ta\nb \vc\fd\r\ne"
-	clean = CleanKeywords(s)
+	clean = keywords.CleanKeywords(__MONGO_REPLACER, s)
 	if clean != "a b c d e" {
 		panic("replacer fail")
 	}
 
 	s = "school music band club"
-	clean = CleanKeywords(s)
+	clean = keywords.CleanKeywords(__MONGO_REPLACER, s)
 	if clean != "school music band club" {
 		panic("breaking keywords")
 	}

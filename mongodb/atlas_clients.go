@@ -5,7 +5,9 @@ import (
 	"errors"
 	"kenja2/documents"
 	"kenja2/engine"
+	"kenja2/keywords"
 	"os"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -23,6 +25,8 @@ type atlasClient struct {
 	database   *mongo.Database
 	collection *mongo.Collection
 	logger     engine.Logger
+
+	replacer *strings.Replacer
 }
 
 func connect(uri string, logger engine.Logger) (atlasClient, error) {
@@ -52,6 +56,7 @@ func connect(uri string, logger engine.Logger) (atlasClient, error) {
 	a.database = database
 	a.collection = collection
 	a.logger = logger
+	a.replacer = __MONGO_REPLACER
 	return a, nil
 }
 
@@ -91,7 +96,7 @@ func (a *atlasClient) textSearch(
 		return nil, errors.New("unexpected keywords length")
 	}
 
-	k := CleanKeywords(q.Keywords)
+	k := keywords.CleanKeywords(a.replacer, q.Keywords)
 	if len(k) == 0 {
 		return nil, errors.New("invalid keywords")
 	}
