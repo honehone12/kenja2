@@ -8,7 +8,7 @@ import (
 )
 
 type AtlasBuffer[E endec.Encoder, D endec.Decoder] struct {
-	atlasClient
+	*atlasClient
 	encoder E
 	decoder D
 }

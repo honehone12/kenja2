@@ -29,35 +29,36 @@ type atlasClient struct {
 	replacer *strings.Replacer
 }
 
-func connect(uri string, logger engine.Logger) (atlasClient, error) {
-	a := atlasClient{}
-
+func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 	db := os.Getenv("MONGO_DB_NAME")
 	if len(db) == 0 {
-		return a, errors.New("env for db name is not set")
+		return nil, errors.New("env for db name is not set")
+	}
+	cl := os.Getenv("MONGO_COLLECTION")
+	if len(cl) == 0 {
+		return nil, errors.New("env for collection is not set")
 	}
 
+	d := m.Database(db)
+	c := d.Collection(cl)
+
+	return &atlasClient{
+		client:     m,
+		database:   d,
+		collection: c,
+		logger:     l,
+		replacer:   __MONGO_REPLACER,
+	}, nil
+}
+
+func connect(uri string, l engine.Logger) (*atlasClient, error) {
 	ops := options.Client().ApplyURI(uri)
-	client, err := mongo.Connect(ops)
+	m, err := mongo.Connect(ops)
 	if err != nil {
-		return a, err
+		return nil, err
 	}
 
-	database := client.Database(db)
-
-	coll := os.Getenv("MONGO_COLLECTION")
-	if len(coll) == 0 {
-		return a, errors.New("env for collection is not set")
-	}
-
-	collection := database.Collection(coll)
-
-	a.client = client
-	a.database = database
-	a.collection = collection
-	a.logger = logger
-	a.replacer = __MONGO_REPLACER
-	return a, nil
+	return newAtlasClient(m, l)
 }
 
 func (a *atlasClient) document(
