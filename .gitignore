@@ -3,6 +3,8 @@
 #
 # Binaries for programs and plugins
 *.so
+bootstrap
+*.zip
 
 # Test binary, built with `go test -c`
 *.test

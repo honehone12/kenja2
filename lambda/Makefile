@@ -7,5 +7,5 @@ build:
 
 zip:
 	$(MAKE) -C document zip
-	$(MAKE) -C text zip
-	$(MAKE) -C vector zip
+	$(MAKE) -C search_buffer_text zip
+	$(MAKE) -C search_buffer_vector zip
