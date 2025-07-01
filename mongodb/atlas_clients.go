@@ -31,7 +31,7 @@ type atlasClient struct {
 }
 
 func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
-	db := os.Getenv("MONGO_DB_NAME")
+	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
 	}
