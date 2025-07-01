@@ -31,6 +31,24 @@ func Connect[E endec.Encoder, D endec.Decoder](
 	}, nil
 }
 
+func ConnectAws[E endec.Encoder, D endec.Decoder](
+	uri string,
+	encoder E,
+	decoder D,
+	logger engine.Logger,
+) (*AtlasBuffer[E, D], error) {
+	mongoClient, err := connectAws(uri, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AtlasBuffer[E, D]{
+		mongoClient,
+		encoder,
+		decoder,
+	}, nil
+}
+
 func (a *AtlasBuffer[E, D]) Encoder() endec.Encoder {
 	return a.encoder
 }

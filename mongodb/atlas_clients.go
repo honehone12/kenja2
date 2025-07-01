@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"kenja2/documents"
 	"kenja2/engine"
 	"kenja2/keywords"
@@ -59,6 +60,24 @@ func connect(uri string, l engine.Logger) (*atlasClient, error) {
 	}
 
 	return newAtlasClient(m, l)
+}
+
+func connectAws(format string, l engine.Logger) (*atlasClient, error) {
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	if len(accessKey) == 0 {
+		return nil, errors.New("env for aws access key id is not set")
+	}
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	if len(secretKey) == 0 {
+		return nil, errors.New("env for aws secret access key is not set")
+	}
+	tkn := os.Getenv("AWS_SESSION_TOKEN")
+	if len(tkn) == 0 {
+		return nil, errors.New("env for aws session token is not set")
+	}
+
+	uri := fmt.Sprintf(format, accessKey, secretKey, tkn)
+	return connect(uri, l)
 }
 
 func (a *atlasClient) document(

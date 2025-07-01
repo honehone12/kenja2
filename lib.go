@@ -33,3 +33,21 @@ func ConnectAtlas[E endec.Encoder, D endec.Decoder](
 		logger,
 	)
 }
+
+func ConnectAtlasAws[E endec.Encoder, D endec.Decoder](
+	encoder E,
+	decoder D,
+	logger engine.Logger,
+) (engine.Engine, error) {
+	uri := os.Getenv("SEARCHENGINE_URI")
+	if len(uri) == 0 {
+		return nil, errors.New("env for search engine uri is not set")
+	}
+
+	return mongodb.ConnectAws(
+		uri,
+		encoder,
+		decoder,
+		logger,
+	)
+}
