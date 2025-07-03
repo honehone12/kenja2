@@ -90,7 +90,10 @@ func (a *AtlasBuffer[E, D]) TextSearch(
 		return nil, err
 	}
 
-	for i := range len(candidates) {
+	l := len(candidates)
+	a.logger.Infof("buffered %d candidates", l)
+
+	for i := range l {
 		candidates[i].Format()
 	}
 
@@ -113,7 +116,10 @@ func (a *AtlasBuffer[E, D]) VectorSeach(
 		return nil, err
 	}
 
-	for i := range len(candidates) {
+	l := len(candidates)
+	a.logger.Infof("buffered %d candidates", l)
+
+	for i := range l {
 		candidates[i].Format()
 	}
 
