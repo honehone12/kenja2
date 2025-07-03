@@ -106,7 +106,7 @@ func main() {
 	ctx := context.Background()
 	__ENGINE, err = kenja2.ConnectAtlas(
 		kenja2.NewMsgPack(),
-		kenja2.NewMsgPack(),
+		kenja2.NewJson(),
 		e.Logger,
 	)
 	if err != nil {
