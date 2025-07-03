@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/vmihailenco/msgpack/v5"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -78,49 +76,6 @@ func TestParentIsZero(t *testing.T) {
 	}
 }
 
-func TestDocumentsMsgPack(t *testing.T) {
-	id := bson.NewObjectID()
-	c := Candidate{
-		Parent: Parent{
-			Id:           id,
-			Name:         "Test",
-			NameJapanese: "",
-		},
-		Name:         "Test",
-		NameJapanese: "",
-	}
-	c.Format()
-	b, err := msgpack.Marshal(c)
-	if err != nil {
-		panic(err)
-	}
-
-	c = Candidate{}
-	if err := msgpack.Unmarshal(b, &c); err != nil {
-		panic(err)
-	}
-	if c.Parent.IdHex != id.Hex() || c.Parent.Name != "Test" || c.Parent.NameJapanese != "" {
-		panic("decoded wrong parent")
-	}
-	if c.Name != "Test" || c.NameJapanese != "" {
-		panic("decoded wrong names")
-	}
-
-	c.Parent = Parent{}
-	b, err = msgpack.Marshal(c)
-	if err != nil {
-		panic(err)
-	}
-
-	c = Candidate{}
-	if err = msgpack.Unmarshal(b, &c); err != nil {
-		panic(err)
-	}
-	if !bytes.Equal(c.Parent.Id[:], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || c.Parent.Name != "" || c.Parent.NameJapanese != "" {
-		panic("decoded wrong parent")
-	}
-}
-
 func TestQueries(t *testing.T) {
 	s := `{
 		"rating": 1,
@@ -150,69 +105,4 @@ func TestQueries(t *testing.T) {
 		fmt.Println(string(b))
 		panic("encoded wrong query")
 	}
-}
-
-func TestQueriesMsgPack(t *testing.T) {
-	q := TextQuery{
-		Rating:   1,
-		Keywords: "miku miku",
-	}
-	b, err := msgpack.Marshal(q)
-	if err != nil {
-		panic(err)
-	}
-
-	q = TextQuery{}
-	if err = msgpack.Unmarshal(b, &q); err != nil {
-		panic(err)
-	}
-	if q.Rating != 1 || q.ItemType != 0 || q.Keywords != "miku miku" {
-		panic("decoded wrong rating")
-	}
-}
-
-func TestJsonBsonMsgPack(t *testing.T) {
-	d := make([]Candidate, 10000)
-	r := SearchResult{Candidates: d}
-
-	now1 := time.Now()
-
-	jb, err := json.Marshal(r)
-	if err != nil {
-		panic(err)
-	}
-	rj := SearchResult{}
-	if err = json.Unmarshal(jb, &rj); err != nil {
-		panic(err)
-	}
-
-	now2 := time.Now()
-	fmt.Printf("json: %d bytes\n", len(jb))
-	fmt.Printf("time: %dmilsecs\n", now2.Sub(now1).Milliseconds())
-
-	bb, err := bson.Marshal(r)
-	if err != nil {
-		panic(err)
-	}
-	rb := SearchResult{}
-	if err = bson.Unmarshal(bb, &rb); err != nil {
-		panic(err)
-	}
-
-	now3 := time.Now()
-	fmt.Printf("bson: %d bytes\n", len(bb))
-	fmt.Printf("time: %dmilsecs\n", now3.Sub(now2).Milliseconds())
-
-	mb, err := msgpack.Marshal(r)
-	if err != nil {
-		panic(err)
-	}
-	rm := SearchResult{}
-	if err = msgpack.Unmarshal(mb, &rm); err != nil {
-		panic(err)
-	}
-
-	now4 := time.Now()
-	fmt.Printf("msgpack: %d bytes\n", len(mb))
-	fmt.Printf("time: %dmilsecs\n", now4.Sub(now3).Milliseconds())
 }

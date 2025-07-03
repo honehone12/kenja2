@@ -3,83 +3,53 @@ package mongodb
 import (
 	"context"
 	"kenja2/documents"
-	"kenja2/endec"
 	"kenja2/engine"
 )
 
-type AtlasBuffer[E endec.Encoder, D endec.Decoder] struct {
+type AtlasBuffer struct {
 	*atlasClient
-	encoder E
-	decoder D
 }
 
-func Connect[E endec.Encoder, D endec.Decoder](
-	uri string,
-	encoder E,
-	decoder D,
-	logger engine.Logger,
-) (*AtlasBuffer[E, D], error) {
+func Connect(uri string, logger engine.Logger) (*AtlasBuffer, error) {
 	mongoClient, err := connect(uri, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer[E, D]{
-		mongoClient,
-		encoder,
-		decoder,
-	}, nil
+	return &AtlasBuffer{atlasClient: mongoClient}, nil
 }
 
-func ConnectAws[E endec.Encoder, D endec.Decoder](
-	uri string,
-	encoder E,
-	decoder D,
-	logger engine.Logger,
-) (*AtlasBuffer[E, D], error) {
+func ConnectAws(uri string, logger engine.Logger) (*AtlasBuffer, error) {
 	mongoClient, err := connectAws(uri, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer[E, D]{
-		mongoClient,
-		encoder,
-		decoder,
-	}, nil
+	return &AtlasBuffer{atlasClient: mongoClient}, nil
 }
 
-func (a *AtlasBuffer[E, D]) Encoder() endec.Encoder {
-	return a.encoder
-}
-
-func (a *AtlasBuffer[E, D]) Decoder() endec.Decoder {
-	return a.decoder
-}
-
-func (a *AtlasBuffer[E, D]) Document(
+func (a *AtlasBuffer) Document(
 	ctx context.Context,
 	q *documents.DocumentQuery,
-) ([]byte, error) {
+) (*documents.SingleDocument, error) {
 	res, err := a.document(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
-	d := documents.SingleDocument{}
-	if err := res.Decode(&d); err != nil {
+	d := &documents.SingleDocument{}
+	if err := res.Decode(d); err != nil {
 		return nil, err
 	}
 
 	d.Format()
-
-	return a.encoder.Marshal(d)
+	return d, nil
 }
 
-func (a *AtlasBuffer[E, D]) TextSearch(
+func (a *AtlasBuffer) TextSearch(
 	ctx context.Context,
 	q *documents.TextQuery,
-) ([]byte, error) {
+) (*documents.SearchResult, error) {
 	stream, err := a.textSearch(ctx, q)
 	if err != nil {
 		return nil, err
@@ -97,15 +67,15 @@ func (a *AtlasBuffer[E, D]) TextSearch(
 		candidates[i].Format()
 	}
 
-	return a.encoder.Marshal(documents.SearchResult{
+	return &documents.SearchResult{
 		Candidates: candidates,
-	})
+	}, nil
 }
 
-func (a *AtlasBuffer[E, D]) VectorSeach(
+func (a *AtlasBuffer) VectorSeach(
 	ctx context.Context,
 	q *documents.VectorQuery,
-) ([]byte, error) {
+) (*documents.SearchResult, error) {
 	stream, err := a.vectorSearch(ctx, q)
 	if err != nil {
 		return nil, err
@@ -123,11 +93,11 @@ func (a *AtlasBuffer[E, D]) VectorSeach(
 		candidates[i].Format()
 	}
 
-	return a.encoder.Marshal(documents.SearchResult{
+	return &documents.SearchResult{
 		Candidates: candidates,
-	})
+	}, nil
 }
 
-func (a *AtlasBuffer[E, D]) Close(ctx context.Context) error {
+func (a *AtlasBuffer) Close(ctx context.Context) error {
 	return a.client.Disconnect(ctx)
 }

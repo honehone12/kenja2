@@ -2,15 +2,11 @@ module kenja2
 
 go 1.24.2
 
-require (
-	github.com/vmihailenco/msgpack/v5 v5.4.1
-	go.mongodb.org/mongo-driver/v2 v2.2.2
-)
+require go.mongodb.org/mongo-driver/v2 v2.2.2
 
 require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
