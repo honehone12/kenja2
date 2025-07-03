@@ -19,7 +19,7 @@ func Init() (engine.Engine, error) {
 
 	return kenja2.ConnectAtlasAws(
 		kenja2.NewMsgPack(),
-		kenja2.NewMsgPack(),
+		kenja2.NewJson(),
 		logs.Logger(),
 	)
 }
