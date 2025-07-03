@@ -95,7 +95,7 @@ func (a *atlasClient) document(
 		return nil, err
 	}
 
-	a.logger.Infof("[documet] q=%v", q)
+	a.logger.Infof("[documet] q=%#v", q)
 
 	f := bson.M{"_id": id}
 	op := options.FindOne().SetProjection(bson.M{
@@ -129,7 +129,7 @@ func (a *atlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
-	a.logger.Infof("[text] q=%v", q)
+	a.logger.Infof("[text] q=%#v", q)
 
 	p := mongo.Pipeline{
 		{
@@ -203,7 +203,7 @@ func (a *atlasClient) vectorSearch(
 		return nil, errors.New("vector search requires rating")
 	}
 
-	a.logger.Infof("[vector] q=%v", q)
+	a.logger.Infof("[vector] q=%#v", q)
 
 	i, err := q.ItemType.I32()
 	if err != nil {
