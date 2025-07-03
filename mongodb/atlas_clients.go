@@ -88,7 +88,7 @@ func connectAws(format string, l engine.Logger) (*atlasClient, error) {
 
 func (a *atlasClient) document(
 	ctx context.Context,
-	q documents.DocumentQuery,
+	q *documents.DocumentQuery,
 ) (*mongo.SingleResult, error) {
 	id, err := bson.ObjectIDFromHex(q.Id)
 	if err != nil {
@@ -118,7 +118,7 @@ func (a *atlasClient) document(
 
 func (a *atlasClient) textSearch(
 	ctx context.Context,
-	q documents.TextQuery,
+	q *documents.TextQuery,
 ) (*mongo.Cursor, error) {
 	if len(q.Keywords) > ATLAS_KW_LIMIT {
 		return nil, errors.New("unexpected keywords length")
@@ -194,7 +194,7 @@ func (a *atlasClient) textSearch(
 
 func (a *atlasClient) vectorSearch(
 	ctx context.Context,
-	q documents.VectorQuery,
+	q *documents.VectorQuery,
 ) (*mongo.Cursor, error) {
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")

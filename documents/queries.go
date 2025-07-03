@@ -60,8 +60,20 @@ func (i ItemType) I32() (int32, error) {
 	return i32, nil
 }
 
+type Query interface {
+	Size() int
+}
+
 type DocumentQuery struct {
 	Id string `json:"id" msgpack:"id"`
+}
+
+func (d *DocumentQuery) Size() int {
+	if d == nil {
+		return 0
+	}
+
+	return len(d.Id)
 }
 
 type TextQuery struct {
@@ -70,10 +82,26 @@ type TextQuery struct {
 	Keywords string   `json:"keywords" msgpack:"keywords"`
 }
 
+func (t *TextQuery) Size() int {
+	if t == nil {
+		return 0
+	}
+
+	return len(t.Keywords) + 2
+}
+
 type VectorQuery struct {
 	Rating      Rating      `json:"rating" msgpack:"rating"`
 	ItemType    ItemType    `json:"item_type" msgpack:"item_type"`
 	SourceField VectorField `json:"source_field" msgpack:"source_field"`
 	TargetField VectorField `json:"target_field" msgpack:"target_field"`
 	Id          string      `json:"id" msgpack:"id"`
+}
+
+func (v *VectorQuery) Size() int {
+	if v == nil {
+		return 0
+	}
+
+	return len(v.Id) + 4
 }

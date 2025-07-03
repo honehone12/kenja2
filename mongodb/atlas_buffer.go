@@ -57,12 +57,10 @@ func (a *AtlasBuffer[E, D]) Decoder() endec.Decoder {
 	return a.decoder
 }
 
-func (a *AtlasBuffer[E, D]) Document(ctx context.Context, input []byte) ([]byte, error) {
-	q := documents.DocumentQuery{}
-	if err := a.decoder.Unmarshal(input, &q); err != nil {
-		return nil, err
-	}
-
+func (a *AtlasBuffer[E, D]) Document(
+	ctx context.Context,
+	q *documents.DocumentQuery,
+) ([]byte, error) {
 	res, err := a.document(ctx, q)
 	if err != nil {
 		return nil, err
@@ -78,12 +76,10 @@ func (a *AtlasBuffer[E, D]) Document(ctx context.Context, input []byte) ([]byte,
 	return a.encoder.Marshal(d)
 }
 
-func (a *AtlasBuffer[E, D]) TextSearch(ctx context.Context, input []byte) ([]byte, error) {
-	q := documents.TextQuery{}
-	if err := a.decoder.Unmarshal(input, &q); err != nil {
-		return nil, err
-	}
-
+func (a *AtlasBuffer[E, D]) TextSearch(
+	ctx context.Context,
+	q *documents.TextQuery,
+) ([]byte, error) {
 	stream, err := a.textSearch(ctx, q)
 	if err != nil {
 		return nil, err
@@ -103,12 +99,10 @@ func (a *AtlasBuffer[E, D]) TextSearch(ctx context.Context, input []byte) ([]byt
 	})
 }
 
-func (a *AtlasBuffer[E, D]) VectorSeach(ctx context.Context, input []byte) ([]byte, error) {
-	q := documents.VectorQuery{}
-	if err := a.decoder.Unmarshal(input, &q); err != nil {
-		return nil, err
-	}
-
+func (a *AtlasBuffer[E, D]) VectorSeach(
+	ctx context.Context,
+	q *documents.VectorQuery,
+) ([]byte, error) {
 	stream, err := a.vectorSearch(ctx, q)
 	if err != nil {
 		return nil, err
