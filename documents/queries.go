@@ -2,25 +2,24 @@ package documents
 
 import "errors"
 
-type Rating byte
+type Rating int32
 
 const (
 	RATING_UNSPECIFIED Rating = iota
 	RATING_ALL_AGES
 	RATING_HENTAI
 )
-const RATING_MAX = int32(RATING_HENTAI)
+const RATING_MAX = RATING_HENTAI
 
-func (r Rating) I32() (int32, error) {
-	i32 := int32(r)
-	if i32 < 0 || i32 > RATING_MAX {
-		return 0, errors.New("unexpected rating")
+func (r Rating) Ok() error {
+	if r < 0 || r > RATING_MAX {
+		return errors.New("unexpected rating")
 	}
 
-	return i32, nil
+	return nil
 }
 
-type VectorField byte
+type VectorField int32
 
 const (
 	VFIELD_UNSPECIFIED VectorField = iota
@@ -42,22 +41,21 @@ func (f VectorField) String() (string, error) {
 	}
 }
 
-type ItemType byte
+type ItemType int32
 
 const (
 	ITEM_TYPE_UNSPECIFIED ItemType = iota
 	ITEM_TYPE_ANIME
 	ITEM_TYPE_CHARACTER
 )
-const ITEM_TYPE_MAX = int32(ITEM_TYPE_CHARACTER)
+const ITEM_TYPE_MAX = ITEM_TYPE_CHARACTER
 
-func (i ItemType) I32() (int32, error) {
-	i32 := int32(i)
-	if i32 < 0 || i32 > ITEM_TYPE_MAX {
-		return 0, errors.New("unexpected item type")
+func (i ItemType) Ok() error {
+	if i < 0 || i > ITEM_TYPE_MAX {
+		return errors.New("unexpected item type")
 	}
 
-	return i32, nil
+	return nil
 }
 
 type Query interface {

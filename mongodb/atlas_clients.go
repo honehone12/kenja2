@@ -154,27 +154,25 @@ func (a *atlasClient) textSearch(
 	}
 
 	if q.ItemType != documents.ITEM_TYPE_UNSPECIFIED {
-		i, err := q.ItemType.I32()
-		if err != nil {
+		if err := q.ItemType.Ok(); err != nil {
 			return nil, err
 		}
 
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": i,
+				"item_type": q.ItemType,
 			}},
 		})
 	}
 
 	if q.Rating != documents.RATING_UNSPECIFIED {
-		r, err := q.Rating.I32()
-		if err != nil {
+		if err := q.Rating.Ok(); err != nil {
 			return nil, err
 		}
 
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"rating": r,
+				"rating": q.Rating,
 			}},
 		})
 	}
@@ -205,13 +203,11 @@ func (a *atlasClient) vectorSearch(
 
 	a.logger.Infof("[vector] q=%#v", q)
 
-	i, err := q.ItemType.I32()
-	if err != nil {
+	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
 
-	r, err := q.Rating.I32()
-	if err != nil {
+	if err := q.Rating.Ok(); err != nil {
 		return nil, err
 	}
 
@@ -254,8 +250,8 @@ func (a *atlasClient) vectorSearch(
 			{Key: "$vectorSearch", Value: bson.M{
 				"exact": false,
 				"filter": bson.M{
-					"item_type": i,
-					"rating":    r,
+					"item_type": q.ItemType,
+					"rating":    q.Rating,
 				},
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
