@@ -105,7 +105,7 @@ func main() {
 	port := args()
 	ctx := context.Background()
 	__ENGINE, err = kenja2.ConnectAtlas(
-		kenja2.NewMsgPack(),
+		kenja2.NewJson(),
 		kenja2.NewJson(),
 		e.Logger,
 	)

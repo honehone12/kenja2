@@ -19,7 +19,7 @@ func Init() (engine.Engine, error) {
 	logs.SetLevel(logs.INFO)
 
 	return kenja2.ConnectAtlasAws(
-		kenja2.NewMsgPack(),
+		kenja2.NewJson(),
 		kenja2.NewJson(),
 		logs.Logger(),
 	)
