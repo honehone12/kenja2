@@ -5,8 +5,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"kenja2"
+	"kenja2/documents"
 	"kenja2/engine"
 	"time"
 
@@ -19,7 +19,8 @@ import (
 )
 
 type handlerFunc = func(echo.Context) error
-type engineFunc = func(context.Context, []byte) ([]byte, error)
+type bindFunc[Q documents.Query] = func(echo.Context) (Q, error)
+type engineFunc[Q documents.Query] = func(context.Context, Q) ([]byte, error)
 
 const REQUEST_BODY_LIMIT = 1024
 const REQUEST_TIME_LIMIT = time.Second * 10
@@ -49,7 +50,7 @@ func checkHeaders(req *http.Request) error {
 	return nil
 }
 
-func handler(f engineFunc) handlerFunc {
+func handler[Q documents.Query](f engineFunc[Q], bind bindFunc[Q]) handlerFunc {
 	return func(e echo.Context) error {
 		req := e.Request()
 		if err := checkBodyLimit(req); err != nil {
@@ -64,13 +65,13 @@ func handler(f engineFunc) handlerFunc {
 		ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
 		defer cancel()
 
-		body, err := io.ReadAll(req.Body)
+		q, err := bind(e)
 		if err != nil {
 			e.Logger().Error(err)
-			return responseInternalError(e)
+			return responseBadRequest(e)
 		}
 
-		b, err := f(ctx, body)
+		b, err := f(ctx, q)
 		if err != nil {
 			e.Logger().Error(err)
 			return responseInternalError(e)
@@ -117,9 +118,36 @@ func main() {
 		}
 	}()
 
-	e.POST("/document", handler(__ENGINE.Document))
-	e.POST("/search/buffer/text", handler(__ENGINE.TextSearch))
-	e.POST("/search/buffer/vector", handler(__ENGINE.VectorSeach))
+	e.POST("/document", handler(
+		__ENGINE.Document,
+		func(e echo.Context) (*documents.DocumentQuery, error) {
+			q := &documents.DocumentQuery{}
+			if err := e.Bind(q); err != nil {
+				return nil, err
+			}
+			return q, nil
+		},
+	))
+	e.POST("/search/buffer/text", handler(
+		__ENGINE.TextSearch,
+		func(e echo.Context) (*documents.TextQuery, error) {
+			q := &documents.TextQuery{}
+			if err := e.Bind(q); err != nil {
+				return nil, err
+			}
+			return q, nil
+		},
+	))
+	e.POST("/search/buffer/vector", handler(
+		__ENGINE.VectorSeach,
+		func(e echo.Context) (*documents.VectorQuery, error) {
+			q := &documents.VectorQuery{}
+			if err := e.Bind(q); err != nil {
+				return nil, err
+			}
+			return q, nil
+		},
+	))
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {
