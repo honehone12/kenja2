@@ -7,6 +7,7 @@ import (
 	"kenja2/documents"
 	"kenja2/engine"
 	"kenja2/keywords"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -76,7 +77,12 @@ func connectAws(format string, l engine.Logger) (*atlasClient, error) {
 		return nil, errors.New("env for aws session token is not set")
 	}
 
-	uri := fmt.Sprintf(format, accessKey, secretKey, tkn)
+	uri := fmt.Sprintf(
+		format,
+		url.QueryEscape(accessKey),
+		url.QueryEscape(secretKey),
+		url.QueryEscape(tkn),
+	)
 	return connect(uri, l)
 }
 
