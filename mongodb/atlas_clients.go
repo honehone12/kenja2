@@ -56,8 +56,8 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 
 func connect(uri string, l engine.Logger) (*atlasClient, error) {
 	ops := options.Client().ApplyURI(uri)
-	conn := MAX_ATLAS_CONN
-	ops.MaxConnecting = &conn
+	ops.SetMaxPoolSize(MAX_ATLAS_CONN)
+
 	m, err := mongo.Connect(ops)
 	if err != nil {
 		return nil, err
