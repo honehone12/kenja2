@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+const MAX_ATLAS_CONN uint64 = 3
 const ATLAS_SEARCH_SIZE = 100
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
@@ -55,6 +56,8 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 
 func connect(uri string, l engine.Logger) (*atlasClient, error) {
 	ops := options.Client().ApplyURI(uri)
+	conn := MAX_ATLAS_CONN
+	ops.MaxConnecting = &conn
 	m, err := mongo.Connect(ops)
 	if err != nil {
 		return nil, err
