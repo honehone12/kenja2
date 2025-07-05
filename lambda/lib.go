@@ -12,7 +12,7 @@ import (
 const REQUEST_BODY_LIMIT = 1024
 
 type Kenja struct {
-	engine engine.Engine
+	engine engine.BufferingEngine
 }
 
 func NewKenja() (*Kenja, error) {

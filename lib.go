@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func ConnectAtlas(logger engine.Logger) (engine.Engine, error) {
+func ConnectAtlas(logger engine.Logger) (engine.BufferingEngine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
 		return nil, errors.New("env for search engine uri is not set")
@@ -16,7 +16,7 @@ func ConnectAtlas(logger engine.Logger) (engine.Engine, error) {
 	return mongodb.Connect(uri, logger)
 }
 
-func ConnectAtlasAws(logger engine.Logger) (engine.Engine, error) {
+func ConnectAtlasAws(logger engine.Logger) (engine.BufferingEngine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
 		return nil, errors.New("env for search engine uri is not set")

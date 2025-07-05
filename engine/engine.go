@@ -5,7 +5,7 @@ import (
 	"kenja2/documents"
 )
 
-type Engine interface {
+type BufferingEngine interface {
 	TextSearch(
 		ctx context.Context,
 		q *documents.SearchQuery,
