@@ -2,49 +2,29 @@ package lambda
 
 import (
 	"context"
-	"fmt"
-	"kenja2"
+	"errors"
 	"kenja2/documents"
 	"kenja2/engine"
-	"kenja2/lambda/logs"
 )
-
-type HadlerFunc[
-	Q documents.Query,
-	R any,
-] = func(context.Context, Q) (R, error)
-type EngineFunc[
-	Q documents.Query,
-	R any,
-] = func(context.Context, Q) (R, error)
 
 const REQUEST_BODY_LIMIT = 1024
 
-func Init() (engine.Engine, error) {
-	logs.FmtDefault()
-	logs.SetLevel(logs.INFO)
-
-	return kenja2.ConnectAtlasAws(logs.Logger())
+type Kenja struct {
+	engine engine.Engine
 }
 
-func Handler[
-	Q documents.Query,
-	A any,
-	R ~*A,
-](f EngineFunc[Q, R]) HadlerFunc[Q, R] {
-	return func(ctx context.Context, q Q) (R, error) {
-		if size := q.Size(); size == 0 || size > REQUEST_BODY_LIMIT {
-			err := fmt.Errorf("invalid request size: %d", size)
-			logs.Warn(err)
-			return nil, err
-		}
+func NewKenja(engine engine.Engine) *Kenja {
+	return &Kenja{engine}
+}
 
-		res, err := f(ctx, q)
-		if err != nil {
-			logs.Error(err)
-			return nil, err
-		}
-
-		return res, nil
+func (k *Kenja) Enter(
+	ctx context.Context,
+	q *documents.SearchQuery,
+) ([]documents.FlatDocument, error) {
+	size, ok := q.StringSize()
+	if !ok || size > REQUEST_BODY_LIMIT {
+		return nil, errors.New("invalid request size")
 	}
+
+	return nil, nil
 }

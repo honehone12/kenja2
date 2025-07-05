@@ -30,72 +30,53 @@ func ConnectAws(uri string, logger engine.Logger) (*AtlasBuffer, error) {
 
 func (a *AtlasBuffer) Document(
 	ctx context.Context,
-	q *documents.DocumentQuery,
-) (*documents.SingleDocument, error) {
+	q *documents.SearchQuery,
+) ([]documents.FlatDocument, error) {
 	res, err := a.document(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
-	d := &documents.SingleDocument{}
+	d := documents.FlatDocument{}
 	if err := res.Decode(d); err != nil {
 		return nil, err
 	}
 
-	d.Format()
-	return d, nil
+	return []documents.FlatDocument{d}, nil
 }
 
 func (a *AtlasBuffer) TextSearch(
 	ctx context.Context,
-	q *documents.TextQuery,
-) (*documents.SearchResult, error) {
+	q *documents.SearchQuery,
+) ([]documents.FlatDocument, error) {
 	stream, err := a.textSearch(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
-	var candidates []documents.Candidate
-	if err := stream.All(ctx, &candidates); err != nil {
+	var docs []documents.FlatDocument
+	if err := stream.All(ctx, &docs); err != nil {
 		return nil, err
 	}
 
-	l := len(candidates)
-	a.logger.Infof("buffered %d candidates", l)
-
-	for i := range l {
-		candidates[i].Format()
-	}
-
-	return &documents.SearchResult{
-		Candidates: candidates,
-	}, nil
+	return docs, nil
 }
 
 func (a *AtlasBuffer) VectorSeach(
 	ctx context.Context,
-	q *documents.VectorQuery,
-) (*documents.SearchResult, error) {
+	q *documents.SearchQuery,
+) ([]documents.FlatDocument, error) {
 	stream, err := a.vectorSearch(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 
-	var candidates []documents.Candidate
-	if err := stream.All(ctx, &candidates); err != nil {
+	var docs []documents.FlatDocument
+	if err := stream.All(ctx, &docs); err != nil {
 		return nil, err
 	}
 
-	l := len(candidates)
-	a.logger.Infof("buffered %d candidates", l)
-
-	for i := range l {
-		candidates[i].Format()
-	}
-
-	return &documents.SearchResult{
-		Candidates: candidates,
-	}, nil
+	return docs, nil
 }
 
 func (a *AtlasBuffer) Close(ctx context.Context) error {

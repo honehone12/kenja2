@@ -8,16 +8,16 @@ import (
 type Engine interface {
 	TextSearch(
 		ctx context.Context,
-		q *documents.TextQuery,
-	) (*documents.SearchResult, error)
+		q *documents.SearchQuery,
+	) ([]documents.FlatDocument, error)
 	VectorSeach(
 		ctx context.Context,
-		q *documents.VectorQuery,
-	) (*documents.SearchResult, error)
+		q *documents.SearchQuery,
+	) ([]documents.FlatDocument, error)
 	Document(
 		ctx context.Context,
-		q *documents.DocumentQuery,
-	) (*documents.SingleDocument, error)
+		q *documents.SearchQuery,
+	) ([]documents.FlatDocument, error)
 
 	Close(ctx context.Context) error
 }
