@@ -7,21 +7,20 @@ import (
 )
 
 type FlatDocument struct {
-	Id           bson.ObjectID `json:"-" bson:"_id"`
+	Id           bson.ObjectID `json:"id" bson:"_id"`
 	Parent       Parent        `json:"parent,omitzero" bson:"parent"`
 	Name         string        `json:"name" bson:"name"`
 	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english"`
 	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese"`
-	Url          string        `json:"url" bson:"url" msgpack:"url"`
+	Url          string        `json:"url,omitempty" bson:"url"`
 	Studios      []string      `json:"studios,omitempty" bson:"studios"`
 	Aliases      []string      `json:"aliases,omitempty" bson:"aliases"`
 }
 
 type Parent struct {
-	Id           bson.ObjectID `json:"-" bson:"id" msgpack:"-"`
-	IdHex        string        `json:"id" bson:"-" msgpack:"id"`
-	Name         string        `json:"name" bson:"name" msgpack:"name"`
-	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese" msgpack:"name_japanese,omitempty"`
+	Id           bson.ObjectID `json:"id" bson:"id"`
+	Name         string        `json:"name" bson:"name"`
+	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese"`
 }
 
 func (p Parent) IsZero() bool {
@@ -29,7 +28,7 @@ func (p Parent) IsZero() bool {
 }
 
 type SearchResult struct {
-	Documents []FlatDocument `json:"candidates,omitempty" msgpack:"candidates,omitempty"`
+	Documents []FlatDocument `json:"documents,omitempty"`
 }
 
 type Vector struct {
