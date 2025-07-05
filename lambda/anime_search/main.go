@@ -2,36 +2,48 @@ package main
 
 import (
 	"context"
-	"kenja2"
+	"errors"
 	"kenja2/documents"
-	kenja "kenja2/lambda"
+	kenjalambda "kenja2/lambda"
 	"kenja2/lambda/logs"
 
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-var __Kenja *kenja.Kenja
+var __kenja *kenjalambda.Kenja
 
-func Handler(ctx context.Context, q documents.SearchQuery) (documents.SearchResult, error) {
-	docs, err := __Kenja.Enter(ctx, &q)
-	if err != nil {
-		logs.Warn(err)
-		return documents.SearchResult{}, err
+func Handler(
+	ctx context.Context,
+	q documents.SearchQuery,
+) (documents.SearchResult, error) {
+	r := documents.SearchResult{}
+
+	if __kenja == nil {
+		err := errors.New("kenja is not initialized")
+		logs.Error(err)
+		return r, err
 	}
 
-	return documents.SearchResult{Documents: docs}, nil
+	docs, err := __kenja.Enter(ctx, &q)
+	if err != nil {
+		logs.Warn(err)
+		return r, err
+	}
+
+	r.Documents = docs
+	return r, nil
 }
 
 func main() {
 	logs.FmtDefault()
 	logs.SetLevel(logs.INFO)
 
-	engine, err := kenja2.ConnectAtlasAws(logs.Logger())
+	k, err := kenjalambda.NewKenja()
 	if err != nil {
 		logs.Panic(err)
 	}
 
-	__Kenja = kenja.NewKenja(engine)
+	__kenja = k
 
 	lambda.Start(Handler)
 }

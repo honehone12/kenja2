@@ -5,7 +5,7 @@ import (
 	"math/bits"
 )
 
-type Rating int32
+type Rating uint32
 
 const (
 	RATING_UNSPECIFIED Rating = iota
@@ -15,14 +15,14 @@ const (
 const RATING_MAX = RATING_HENTAI
 
 func (r Rating) Ok() error {
-	if r < 0 || r > RATING_MAX {
+	if r > RATING_MAX {
 		return errors.New("unexpected rating")
 	}
 
 	return nil
 }
 
-type VectorField int32
+type VectorField uint32
 
 const (
 	VFIELD_UNSPECIFIED VectorField = iota
@@ -44,7 +44,7 @@ func (f VectorField) String() (string, error) {
 	}
 }
 
-type ItemType int32
+type ItemType uint32
 
 const (
 	ITEM_TYPE_UNSPECIFIED ItemType = iota
@@ -54,20 +54,31 @@ const (
 const ITEM_TYPE_MAX = ITEM_TYPE_CHARACTER
 
 func (i ItemType) Ok() error {
-	if i < 0 || i > ITEM_TYPE_MAX {
+	if i > ITEM_TYPE_MAX {
 		return errors.New("unexpected item type")
 	}
 
 	return nil
 }
 
+// fist 16bits are category
+// second 16bits are name
+type FunctionId uint32
+
+const (
+	DOCUMENT             FunctionId = 65537
+	SEARCH_BUFFER_TEXT   FunctionId = 131073
+	SEARCH_BUFFER_VECTOR FunctionId = 131074
+)
+
 type SearchQuery struct {
-	Rating      Rating      `json:"rating" msgpack:"rating"`
-	ItemType    ItemType    `json:"item_type" msgpack:"item_type"`
-	SourceField VectorField `json:"source_field" msgpack:"source_field"`
-	TargetField VectorField `json:"target_field" msgpack:"target_field"`
-	Id          string      `json:"id" msgpack:"id"`
-	Keywords    string      `json:"keywords" msgpack:"keywords"`
+	FunctionId  FunctionId  `json:"function_id"`
+	Rating      Rating      `json:"rating"`
+	ItemType    ItemType    `json:"item_type"`
+	SourceField VectorField `json:"source_field"`
+	TargetField VectorField `json:"target_field"`
+	Id          string      `json:"id"`
+	Keywords    string      `json:"keywords"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {

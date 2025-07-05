@@ -1,7 +1,7 @@
 .PHONY:
 
 build:
-	$(MAKE) -C kenja_api build
+	$(MAKE) -C anime_search build
 
 zip:
-	$(MAKE) -C kenja_api zip
+	$(MAKE) -C anime_search zip

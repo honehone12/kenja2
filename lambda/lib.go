@@ -3,8 +3,10 @@ package lambda
 import (
 	"context"
 	"errors"
+	"kenja2"
 	"kenja2/documents"
 	"kenja2/engine"
+	"kenja2/lambda/logs"
 )
 
 const REQUEST_BODY_LIMIT = 1024
@@ -13,8 +15,13 @@ type Kenja struct {
 	engine engine.Engine
 }
 
-func NewKenja(engine engine.Engine) *Kenja {
-	return &Kenja{engine}
+func NewKenja() (*Kenja, error) {
+	engine, err := kenja2.ConnectAtlasAws(logs.Logger())
+	if err != nil {
+		return nil, err
+	}
+
+	return &Kenja{engine}, nil
 }
 
 func (k *Kenja) Enter(
@@ -26,5 +33,14 @@ func (k *Kenja) Enter(
 		return nil, errors.New("invalid request size")
 	}
 
-	return nil, nil
+	switch q.FunctionId {
+	case documents.DOCUMENT:
+		return k.engine.Document(ctx, q)
+	case documents.SEARCH_BUFFER_TEXT:
+		return k.engine.TextSearch(ctx, q)
+	case documents.SEARCH_BUFFER_VECTOR:
+		return k.engine.VectorSeach(ctx, q)
+	default:
+		return nil, errors.New("invalid function id")
+	}
 }

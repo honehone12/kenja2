@@ -6,99 +6,99 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var __LOGGER *logrus.Logger
+var __logger *logrus.Logger
 
 func FmtDefault() {
-	__LOGGER = logrus.New()
-	__LOGGER.Formatter = new(logrus.JSONFormatter)
+	__logger = logrus.New()
+	__logger.Formatter = new(logrus.JSONFormatter)
 }
 
 func FmtPlain() {
-	__LOGGER = logrus.New()
-	__LOGGER.Formatter = new(logrus.TextFormatter)
-	__LOGGER.Formatter.(*logrus.TextFormatter).FullTimestamp = true
+	__logger = logrus.New()
+	__logger.Formatter = new(logrus.TextFormatter)
+	__logger.Formatter.(*logrus.TextFormatter).FullTimestamp = true
 }
 
 func SetLevel(level Level) {
-	__LOGGER.SetLevel(level)
+	__logger.SetLevel(level)
 }
 
 func Logger() engine.Logger {
-	return __LOGGER
+	return __logger
 }
 
 func lazyDefault() {
-	if __LOGGER == nil {
+	if __logger == nil {
 		FmtDefault()
 	}
 }
 
 func Tracef(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Tracef(format, args...)
+	__logger.Tracef(format, args...)
 }
 
 func Trace(args ...any) {
 	lazyDefault()
-	__LOGGER.Trace(args...)
+	__logger.Trace(args...)
 }
 
 func Debugf(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Debugf(format, args...)
+	__logger.Debugf(format, args...)
 }
 
 func Debug(args ...any) {
 	lazyDefault()
-	__LOGGER.Debug(args...)
+	__logger.Debug(args...)
 }
 
 func Infof(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Infof(format, args...)
+	__logger.Infof(format, args...)
 }
 
 func Info(args ...any) {
 	lazyDefault()
-	__LOGGER.Info(args...)
+	__logger.Info(args...)
 }
 
 func Warnf(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Warnf(format, args...)
+	__logger.Warnf(format, args...)
 }
 
 func Warn(args ...any) {
 	lazyDefault()
-	__LOGGER.Warn(args...)
+	__logger.Warn(args...)
 }
 
 func Errorf(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Errorf(format, args...)
+	__logger.Errorf(format, args...)
 }
 
 func Error(args ...any) {
 	lazyDefault()
-	__LOGGER.Error(args...)
+	__logger.Error(args...)
 }
 
 func Panicf(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Panicf(format, args...)
+	__logger.Panicf(format, args...)
 }
 
 func Panic(args ...any) {
 	lazyDefault()
-	__LOGGER.Panic(args...)
+	__logger.Panic(args...)
 }
 
 func Fatalf(format string, args ...any) {
 	lazyDefault()
-	__LOGGER.Fatalf(format, args...)
+	__logger.Fatalf(format, args...)
 }
 
 func Fatal(args ...any) {
 	lazyDefault()
-	__LOGGER.Fatal(args...)
+	__logger.Fatal(args...)
 }
