@@ -10,8 +10,8 @@ type AtlasBuffer struct {
 	*atlasClient
 }
 
-func Connect(uri string, logger engine.Logger) (*AtlasBuffer, error) {
-	mongoClient, err := connect(uri, logger)
+func Connect(uri string, maxConn uint64, logger engine.Logger) (*AtlasBuffer, error) {
+	mongoClient, err := connect(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -19,8 +19,8 @@ func Connect(uri string, logger engine.Logger) (*AtlasBuffer, error) {
 	return &AtlasBuffer{atlasClient: mongoClient}, nil
 }
 
-func ConnectAws(uri string, logger engine.Logger) (*AtlasBuffer, error) {
-	mongoClient, err := connectAws(uri, logger)
+func ConnectAws(uri string, maxConn uint64, logger engine.Logger) (*AtlasBuffer, error) {
+	mongoClient, err := connectAws(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}

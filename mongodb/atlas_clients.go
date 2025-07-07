@@ -17,7 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const MAX_ATLAS_CONN uint64 = 1
 const ATLAS_SEARCH_SIZE = 100
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
@@ -54,9 +53,9 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 	}, nil
 }
 
-func connect(uri string, l engine.Logger) (*atlasClient, error) {
+func connect(uri string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
 	ops := options.Client().ApplyURI(uri)
-	ops.SetMaxPoolSize(MAX_ATLAS_CONN)
+	ops.SetMaxPoolSize(maxConn)
 
 	m, err := mongo.Connect(ops)
 	if err != nil {
@@ -66,7 +65,7 @@ func connect(uri string, l engine.Logger) (*atlasClient, error) {
 	return newAtlasClient(m, l)
 }
 
-func connectAws(format string, l engine.Logger) (*atlasClient, error) {
+func connectAws(format string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
@@ -86,7 +85,7 @@ func connectAws(format string, l engine.Logger) (*atlasClient, error) {
 		url.QueryEscape(secretKey),
 		url.QueryEscape(tkn),
 	)
-	return connect(uri, l)
+	return connect(uri, maxConn, l)
 }
 
 func (a *atlasClient) ping(ctx context.Context) error {

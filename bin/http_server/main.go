@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"kenja2"
@@ -18,16 +17,11 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-type handlerFunc = func(echo.Context) error
-type engineFunc[
-	Q documents.Query,
-	R any,
-] = func(context.Context, Q) (R, error)
-
+const ENGINE_MAX_CONN = 3
 const REQUEST_BODY_LIMIT = 1024
 const REQUEST_TIME_LIMIT = time.Second * 10
 
-var __ENGINE engine.Engine
+var __engine engine.BufferingEngine
 
 func responseBadRequest(e echo.Context) error {
 	return e.String(http.StatusBadRequest, "bad request")
@@ -37,50 +31,41 @@ func responseInternalError(e echo.Context) error {
 	return e.String(http.StatusInternalServerError, "internal error")
 }
 
-func checkBodyLimit(req *http.Request) error {
-	if req.ContentLength > REQUEST_BODY_LIMIT {
-		return errors.New("content length over limit")
+func handler(e echo.Context) error {
+	if __engine == nil {
+		e.Logger().Error("engine is not initialized")
+		return responseInternalError(e)
 	}
-	return nil
-}
 
-func checkHeaders(req *http.Request) error {
+	req := e.Request()
+
+	if req.ContentLength > REQUEST_BODY_LIMIT {
+		e.Logger().Warn("content length over limit")
+		return responseBadRequest(e)
+	}
+
 	contentType := req.Header.Get("Content-Type")
 	if len(contentType) == 0 || contentType != "application/json; charset=utf-8" {
-		return errors.New("unexpected content type header")
+		e.Logger().Warn("unexpected content type header")
+		return responseBadRequest(e)
 	}
-	return nil
-}
 
-func handler[Q documents.Query, R any](f engineFunc[Q, R]) handlerFunc {
-	return func(e echo.Context) error {
-		req := e.Request()
-		if err := checkBodyLimit(req); err != nil {
-			e.Logger().Error(err)
-			return responseBadRequest(e)
-		}
-		if err := checkHeaders(req); err != nil {
-			e.Logger().Error(err)
-			return responseBadRequest(e)
-		}
-
-		ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
-		defer cancel()
-
-		var q Q
-		if err := e.Bind(&q); err != nil {
-			e.Logger().Error(err)
-			return responseBadRequest(e)
-		}
-
-		r, err := f(ctx, q)
-		if err != nil {
-			e.Logger().Error(err)
-			return responseInternalError(e)
-		}
-
-		return e.JSON(http.StatusOK, r)
+	q := documents.SearchQuery{}
+	if err := e.Bind(&q); err != nil {
+		e.Logger().Error(err)
+		return responseBadRequest(e)
 	}
+
+	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
+	defer cancel()
+
+	docs, err := kenja2.BufferedQuery(__engine, ctx, &q)
+	if err != nil {
+		e.Logger().Error(err)
+		return responseInternalError(e)
+	}
+
+	return e.JSON(http.StatusOK, documents.SearchResult{Documents: docs})
 }
 
 func args() uint {
@@ -102,19 +87,17 @@ func main() {
 
 	port := args()
 	ctx := context.Background()
-	__ENGINE, err = kenja2.ConnectAtlas(e.Logger)
+	__engine, err = kenja2.ConnectAtlas(ENGINE_MAX_CONN, e.Logger)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
 	defer func() {
-		if err := __ENGINE.Close(ctx); err != nil {
+		if err := __engine.Close(ctx); err != nil {
 			e.Logger.Error(err)
 		}
 	}()
 
-	e.POST("/document", handler(__ENGINE.Document))
-	e.POST("/search/buffer/text", handler(__ENGINE.TextSearch))
-	e.POST("/search/buffer/vector", handler(__ENGINE.VectorSeach))
+	e.POST("/anime-search", handler)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)
 	if err := e.Start(listenAt); err != nil {

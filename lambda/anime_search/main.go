@@ -12,36 +12,19 @@ import (
 )
 
 const REQUEST_BODY_LIMIT = 1024
+const ENGINE_MAX_CONN = 1
 
 var __engine engine.BufferingEngine
-
-func entry(
-	ctx context.Context,
-	q *documents.SearchQuery,
-) ([]documents.FlatDocument, error) {
-	if __engine == nil {
-		return nil, errors.New("engine is not initialized")
-	}
-
-	switch q.FunctionId {
-	case documents.PING:
-		return nil, __engine.Ping(ctx)
-	case documents.DOCUMENT:
-		return __engine.Document(ctx, q)
-	case documents.SEARCH_BUFFER_TEXT:
-		return __engine.TextSearch(ctx, q)
-	case documents.SEARCH_BUFFER_VECTOR:
-		return __engine.VectorSeach(ctx, q)
-	default:
-		return nil, errors.New("invalid function id")
-	}
-}
 
 func Handler(
 	ctx context.Context,
 	q documents.SearchQuery,
 ) (documents.SearchResult, error) {
 	r := documents.SearchResult{}
+
+	if __engine == nil {
+		return r, errors.New("engine is not initialized")
+	}
 
 	size, ok := q.StringSize()
 	if !ok || size > REQUEST_BODY_LIMIT {
@@ -50,7 +33,7 @@ func Handler(
 		return r, err
 	}
 
-	docs, err := entry(ctx, &q)
+	docs, err := kenja2.BufferedQuery(__engine, ctx, &q)
 	if err != nil {
 		logs.Error(err)
 		return r, err
@@ -64,7 +47,7 @@ func main() {
 	logs.FmtDefault()
 	logs.SetLevel(logs.INFO)
 
-	e, err := kenja2.ConnectAtlasAws(logs.Logger())
+	e, err := kenja2.ConnectAtlasAws(ENGINE_MAX_CONN, logs.Logger())
 	if err != nil {
 		logs.Panic(err)
 	}
