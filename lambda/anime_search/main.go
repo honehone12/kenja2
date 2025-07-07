@@ -12,7 +12,7 @@ import (
 )
 
 const REQUEST_BODY_LIMIT = 1024
-const ENGINE_MAX_CONN = 1
+const ENGINE_MAX_CONN = 3
 
 var __engine engine.BufferingEngine
 
