@@ -42,7 +42,7 @@ func (a *AtlasBuffer) Document(
 	}
 
 	d := documents.FlatDocument{}
-	if err := res.Decode(d); err != nil {
+	if err := res.Decode(&d); err != nil {
 		return nil, err
 	}
 
@@ -63,6 +63,8 @@ func (a *AtlasBuffer) TextSearch(
 		return nil, err
 	}
 
+	a.logger.Infof("buffered %d items", len(docs))
+
 	return docs, nil
 }
 
@@ -79,6 +81,8 @@ func (a *AtlasBuffer) VectorSeach(
 	if err := stream.All(ctx, &docs); err != nil {
 		return nil, err
 	}
+
+	a.logger.Infof("buffered %d items", len(docs))
 
 	return docs, nil
 }

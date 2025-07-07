@@ -89,6 +89,7 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*atlasClient, e
 }
 
 func (a *atlasClient) ping(ctx context.Context) error {
+	a.logger.Info("ping")
 	return a.client.Ping(ctx, nil)
 }
 
