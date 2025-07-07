@@ -76,8 +76,7 @@ type SearchQuery struct {
 	FunctionId  FunctionId  `json:"function_id"`
 	Rating      Rating      `json:"rating"`
 	ItemType    ItemType    `json:"item_type"`
-	SourceField VectorField `json:"source_field"`
-	TargetField VectorField `json:"target_field"`
+	VectorField VectorField `json:"source_field"`
 	Id          string      `json:"id"`
 	Keywords    string      `json:"keywords"`
 }

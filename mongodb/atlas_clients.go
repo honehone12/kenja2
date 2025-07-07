@@ -223,7 +223,7 @@ func (a *atlasClient) vectorSearch(
 			return nil, err
 		}
 
-		src, err := q.SourceField.String()
+		src, err := q.VectorField.String()
 		if err != nil {
 			return nil, err
 		}
@@ -239,13 +239,13 @@ func (a *atlasClient) vectorSearch(
 			return nil, err
 		}
 
-		srcVec, err = v.Binary(q.SourceField)
+		srcVec, err = v.Binary(q.VectorField)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	targetField, err := q.TargetField.String()
+	targetField, err := q.VectorField.String()
 	if err != nil {
 		return nil, err
 	}
