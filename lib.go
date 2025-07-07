@@ -37,9 +37,9 @@ func BufferedQuery(
 		return nil, engine.Ping(ctx)
 	case documents.DOCUMENT:
 		return engine.Document(ctx, q)
-	case documents.SEARCH_BUFFER_TEXT:
+	case documents.TEXTSEARCH_BUFFER:
 		return engine.TextSearch(ctx, q)
-	case documents.SEARCH_BUFFER_VECTOR:
+	case documents.VECTORSEARCH_BUFFER:
 		return engine.VectorSeach(ctx, q)
 	default:
 		return nil, errors.New("invalid function id")

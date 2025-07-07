@@ -66,10 +66,10 @@ func (i ItemType) Ok() error {
 type FunctionId uint32
 
 const (
-	PING                 FunctionId = 1
-	DOCUMENT             FunctionId = 65537
-	SEARCH_BUFFER_TEXT   FunctionId = 131073
-	SEARCH_BUFFER_VECTOR FunctionId = 131074
+	PING                FunctionId = 1
+	DOCUMENT            FunctionId = 65537
+	TEXTSEARCH_BUFFER   FunctionId = 131073
+	VECTORSEARCH_BUFFER FunctionId = 131074
 )
 
 type SearchQuery struct {
