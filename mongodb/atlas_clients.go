@@ -203,18 +203,17 @@ func (a *atlasClient) vectorSearch(
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
-	if q.Rating == documents.RATING_UNSPECIFIED {
-		return nil, errors.New("vector search requires rating")
+	if err := q.ItemType.Ok(); err != nil {
+		return nil, err
+	}
+	if err := q.Rating.Ok(); err != nil {
+		return nil, err
 	}
 
 	a.logger.Infof("[vector] q=%#v", q)
 
-	if err := q.ItemType.Ok(); err != nil {
-		return nil, err
-	}
-
-	if err := q.Rating.Ok(); err != nil {
-		return nil, err
+	if q.Rating == documents.RATING_UNSPECIFIED {
+		q.Rating = documents.RATING_ALL_AGES
 	}
 
 	var srcVec bson.Binary
