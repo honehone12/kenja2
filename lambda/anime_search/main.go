@@ -24,6 +24,8 @@ func entry(
 	}
 
 	switch q.FunctionId {
+	case documents.PING:
+		return nil, __engine.Ping(ctx)
 	case documents.DOCUMENT:
 		return __engine.Document(ctx, q)
 	case documents.SEARCH_BUFFER_TEXT:

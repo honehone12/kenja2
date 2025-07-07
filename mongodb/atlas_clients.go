@@ -89,6 +89,10 @@ func connectAws(format string, l engine.Logger) (*atlasClient, error) {
 	return connect(uri, l)
 }
 
+func (a *atlasClient) ping(ctx context.Context) error {
+	return a.client.Ping(ctx, nil)
+}
+
 func (a *atlasClient) document(
 	ctx context.Context,
 	q *documents.SearchQuery,

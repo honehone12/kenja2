@@ -6,6 +6,7 @@ import (
 )
 
 type BufferingEngine interface {
+	Ping(ctx context.Context) error
 	TextSearch(
 		ctx context.Context,
 		q *documents.SearchQuery,

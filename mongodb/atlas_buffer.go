@@ -28,6 +28,10 @@ func ConnectAws(uri string, logger engine.Logger) (*AtlasBuffer, error) {
 	return &AtlasBuffer{atlasClient: mongoClient}, nil
 }
 
+func (a *AtlasBuffer) Ping(ctx context.Context) error {
+	return a.ping(ctx)
+}
+
 func (a *AtlasBuffer) Document(
 	ctx context.Context,
 	q *documents.SearchQuery,
