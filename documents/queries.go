@@ -23,6 +23,7 @@ func (r Rating) Ok() error {
 }
 
 type VectorField uint32
+type VFieldName string
 
 const (
 	VFIELD_UNSPECIFIED VectorField = iota
@@ -31,7 +32,7 @@ const (
 	VFIELD_STF
 )
 
-func (f VectorField) String() (string, error) {
+func (f VectorField) Name() (VFieldName, error) {
 	switch f {
 	case VFIELD_TXT:
 		return "text_vector", nil
