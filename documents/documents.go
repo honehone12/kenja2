@@ -8,13 +8,11 @@ import (
 
 type FlatDocument struct {
 	Id           bson.ObjectID `json:"id" bson:"_id"`
+	Url          string        `json:"url,omitempty" bson:"url"`
 	Parent       Parent        `json:"parent,omitzero" bson:"parent"`
 	Name         string        `json:"name" bson:"name"`
 	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english"`
 	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese"`
-	Url          string        `json:"url,omitempty" bson:"url"`
-	Studios      []string      `json:"studios,omitempty" bson:"studios"`
-	Aliases      []string      `json:"aliases,omitempty" bson:"aliases"`
 }
 
 type Parent struct {

@@ -172,9 +172,11 @@ func (a *atlasClient) _textSearch(
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: bson.M{
+			"url":           1,
 			"parent":        1,
 			"name":          1,
 			"name_japanese": 1,
+			"name_english":  1,
 		}}},
 	)
 
@@ -216,7 +218,7 @@ func (a *atlasClient) _vectorSearch(
 	itemType documents.ItemType,
 	rating documents.Rating,
 	id bson.ObjectID,
-	vectorField documents.VectorField,
+	vField documents.VectorField,
 	vFieldName documents.VFieldName,
 ) (*mongo.Cursor, error) {
 	if rating == documents.RATING_UNSPECIFIED {
@@ -238,7 +240,7 @@ func (a *atlasClient) _vectorSearch(
 			return nil, err
 		}
 
-		src, err := v.Binary(vectorField)
+		src, err := v.Binary(vField)
 		if err != nil {
 			return nil, err
 		}
@@ -262,9 +264,11 @@ func (a *atlasClient) _vectorSearch(
 		},
 		{
 			{Key: "$project", Value: bson.M{
+				"url":           1,
 				"parent":        1,
 				"name":          1,
 				"name_japanese": 1,
+				"name_english":  1,
 			}},
 		},
 	}
