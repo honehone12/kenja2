@@ -3,6 +3,7 @@ package kenja2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"kenja2/documents"
 	"kenja2/engine"
 	"kenja2/mongodb"
@@ -34,9 +35,9 @@ func BufferedQuery(
 ) ([]documents.FlatDocument, error) {
 	switch q.FunctionId {
 	case documents.PING:
-		return nil, engine.Ping(ctx)
+		fallthrough
 	case documents.DOCUMENT:
-		return engine.Document(ctx, q)
+		return nil, fmt.Errorf("function: %d is not in service", q.FunctionId)
 	case documents.TEXTSEARCH_BUFFER:
 		return engine.TextSearch(ctx, q)
 	case documents.VECTORSEARCH_BUFFER:
