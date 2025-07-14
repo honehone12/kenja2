@@ -34,13 +34,13 @@ func BufferedQuery(
 	q *documents.SearchQuery,
 ) ([]documents.FlatDocument, error) {
 	switch q.FunctionId {
-	case documents.PING:
+	case documents.FID_PING:
 		fallthrough
-	case documents.DOCUMENT:
+	case documents.FID_DOCUMENT:
 		return nil, fmt.Errorf("function: %d is not in service", q.FunctionId)
-	case documents.TEXTSEARCH_BUFFER:
+	case documents.FID_TEXTSEARCH_BUFFER:
 		return engine.TextSearch(ctx, q)
-	case documents.VECTORSEARCH_BUFFER:
+	case documents.FID_VECTORSEARCH_BUFFER:
 		return engine.VectorSeach(ctx, q)
 	default:
 		return nil, errors.New("invalid function id")

@@ -62,15 +62,14 @@ func (i ItemType) Ok() error {
 	return nil
 }
 
-// fist 16bits are category
-// second 16bits are name
 type FunctionId uint32
 
 const (
-	PING                FunctionId = 1
-	DOCUMENT            FunctionId = 65537
-	TEXTSEARCH_BUFFER   FunctionId = 131073
-	VECTORSEARCH_BUFFER FunctionId = 131074
+	FID_UNSPECIFIED FunctionId = iota
+	FID_PING
+	FID_DOCUMENT
+	FID_TEXTSEARCH_BUFFER
+	FID_VECTORSEARCH_BUFFER
 )
 
 type SearchQuery struct {
