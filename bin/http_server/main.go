@@ -7,6 +7,7 @@ import (
 	"kenja2"
 	"kenja2/documents"
 	"kenja2/engine"
+	"os"
 	"time"
 
 	"net/http"
@@ -85,18 +86,18 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 
+	imgRoot := os.Getenv("IMG_ROOT")
+	if len(imgRoot) == 0 {
+		e.Logger.Fatal("env for img root is not set")
+	}
+
 	port := args()
-	ctx := context.Background()
 	__engine, err = kenja2.ConnectAtlas(ENGINE_MAX_CONN, e.Logger)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	defer func() {
-		if err := __engine.Close(ctx); err != nil {
-			e.Logger.Error(err)
-		}
-	}()
 
+	e.Static("/preview", imgRoot)
 	e.POST("/anime-search", handler)
 
 	listenAt := fmt.Sprintf("localhost:%d", port)

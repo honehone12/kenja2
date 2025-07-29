@@ -47,12 +47,11 @@ func main() {
 	logs.FmtDefault()
 	logs.SetLevel(logs.INFO)
 
-	e, err := kenja2.ConnectAtlasAws(ENGINE_MAX_CONN, logs.Logger())
+	var err error
+	__engine, err = kenja2.ConnectAtlasAws(ENGINE_MAX_CONN, logs.Logger())
 	if err != nil {
 		logs.Panic(err)
 	}
-
-	__engine = e
 
 	lambda.Start(Handler)
 }
