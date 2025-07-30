@@ -8,6 +8,7 @@ import (
 
 type FlatDocument struct {
 	Id           bson.ObjectID `json:"id" bson:"_id"`
+	ItemType     ItemType      `json:"item_type" bson:"item_type"`
 	Url          string        `json:"url" bson:"url"`
 	Img          string        `json:"img" bson:"img"`
 	Parent       Parent        `json:"parent,omitzero" bson:"parent"`
