@@ -7,6 +7,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
 	kenja2 v0.0.0
+	lukechampine.com/blake3 v1.4.1
 )
 
 require (
@@ -28,7 +29,6 @@ require (
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	lukechampine.com/blake3 v1.4.1 // indirect
 )
 
 replace kenja2 => ./..

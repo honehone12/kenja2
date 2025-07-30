@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"kenja2"
@@ -16,6 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"lukechampine.com/blake3"
 )
 
 const ENGINE_MAX_CONN = 3
@@ -64,6 +67,21 @@ func handler(e echo.Context) error {
 	if err != nil {
 		e.Logger().Error(err)
 		return responseInternalError(e)
+	}
+
+	e.Logger().Warn("Don't forget to remove hashing")
+	for i := range docs {
+		url := docs[i].Url
+		if len(url) == 0 {
+			err := errors.New("url is empty")
+			e.Logger().Error(err)
+			return responseInternalError(e)
+		}
+
+		hash := blake3.Sum256([]byte(url))
+		x := hex.EncodeToString(hash[:16])
+		img := fmt.Sprintf("%s.jpg", x)
+		docs[i].Img = img
 	}
 
 	return e.JSON(http.StatusOK, documents.SearchResult{Documents: docs})
