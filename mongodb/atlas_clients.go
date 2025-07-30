@@ -110,8 +110,6 @@ func (a *atlasClient) document(
 	op := options.FindOne().SetProjection(bson.M{
 		"text_vector":  0,
 		"image_vector": 0,
-		"staff_vector": 0,
-		"item_type":    0,
 		"rating":       0,
 		"staff":        0,
 		"description":  0,
@@ -172,6 +170,7 @@ func (a *atlasClient) _textSearch(
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: bson.M{
+			"item_type":     1,
 			"url":           1,
 			"parent":        1,
 			"name":          1,
@@ -264,6 +263,7 @@ func (a *atlasClient) _vectorSearch(
 		},
 		{
 			{Key: "$project", Value: bson.M{
+				"item_type":     1,
 				"url":           1,
 				"parent":        1,
 				"name":          1,
