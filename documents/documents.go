@@ -8,7 +8,8 @@ import (
 
 type FlatDocument struct {
 	Id           bson.ObjectID `json:"id" bson:"_id"`
-	Url          string        `json:"url,omitempty" bson:"url"`
+	Url          string        `json:"url" bson:"url"`
+	Img          string        `json:"img" bson:"img"`
 	Parent       Parent        `json:"parent,omitzero" bson:"parent"`
 	Name         string        `json:"name" bson:"name"`
 	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english"`
@@ -32,7 +33,6 @@ type SearchResult struct {
 type Vector struct {
 	TextVector  bson.Vector `bson:"text_vector"`
 	ImageVector bson.Vector `bson:"image_vector"`
-	StaffVector bson.Vector `bson:"staff_vector"`
 }
 
 func (v *Vector) Binary(field VectorField) (bson.Binary, error) {
@@ -42,8 +42,6 @@ func (v *Vector) Binary(field VectorField) (bson.Binary, error) {
 		b = v.TextVector.Binary()
 	case VFIELD_IMG:
 		b = v.ImageVector.Binary()
-	case VFIELD_STF:
-		b = v.StaffVector.Binary()
 	default:
 		return b, errors.New("unexpected field")
 	}
@@ -63,8 +61,6 @@ func (v *Vector) Float32Array(field VectorField) ([]float32, error) {
 		f, ok = v.TextVector.Float32OK()
 	case VFIELD_IMG:
 		f, ok = v.ImageVector.Float32OK()
-	case VFIELD_STF:
-		f, ok = v.StaffVector.Float32OK()
 	default:
 		return nil, errors.New("unexpected field")
 	}
