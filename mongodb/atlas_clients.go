@@ -111,6 +111,7 @@ func (a *atlasClient) document(
 		"text_vector":  0,
 		"image_vector": 0,
 		"rating":       0,
+		"updated_at":   0,
 		"staff":        0,
 		"description":  0,
 	})
@@ -172,6 +173,7 @@ func (a *atlasClient) _textSearch(
 		bson.D{{Key: "$project", Value: bson.M{
 			"item_type":     1,
 			"url":           1,
+			"img":           1,
 			"parent":        1,
 			"name":          1,
 			"name_japanese": 1,
@@ -265,6 +267,7 @@ func (a *atlasClient) _vectorSearch(
 			{Key: "$project", Value: bson.M{
 				"item_type":     1,
 				"url":           1,
+				"img":           1,
 				"parent":        1,
 				"name":          1,
 				"name_japanese": 1,
