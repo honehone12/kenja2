@@ -70,7 +70,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Logger.SetLevel(log.INFO)
-	e.Logger.SetPrefix("KENJA2")
+	e.Logger.SetPrefix("KENJA-ANIME-SEARCH")
 
 	err := godotenv.Load("../../.env")
 	if err != nil {
