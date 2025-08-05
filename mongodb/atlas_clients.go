@@ -136,6 +136,10 @@ func (a *atlasClient) _textSearch(
 				"index": "text",
 				"text": bson.M{
 					"query": keywords,
+					"fuzzy": bson.M{
+						"maxEdits":      2,
+						"maxExpansions": 50,
+					},
 					"path": []string{
 						"name",
 						"name_english",
