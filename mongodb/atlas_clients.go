@@ -21,6 +21,8 @@ const ATLAS_SEARCH_SIZE = 100
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 100
 const ATLAS_CURSOR_MAX_AWAIT = time.Second
+const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
+const FUZZY_MAX_TRY_PER_KW = 100
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -137,8 +139,8 @@ func (a *atlasClient) _textSearch(
 				"text": bson.M{
 					"query": keywords,
 					"fuzzy": bson.M{
-						"maxEdits":      2,
-						"maxExpansions": 50,
+						"maxEdits":      FUZZY_MAX_EDIT_TO_MATCH,
+						"maxExpansions": FUZZY_MAX_TRY_PER_KW,
 					},
 					"path": []string{
 						"name",
