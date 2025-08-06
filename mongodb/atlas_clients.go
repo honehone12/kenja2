@@ -105,6 +105,24 @@ func fieldFlags() bson.M {
 	}
 }
 
+func animeItemTypes() bson.M {
+	return bson.M{
+		"$in": []documents.ItemType{
+			documents.ITEM_TYPE_ANIME,
+			documents.ITEM_TYPE_ANIME_IMG_ONLY,
+		},
+	}
+}
+
+func characterItemTypes() bson.M {
+	return bson.M{
+		"$in": []documents.ItemType{
+			documents.ITEM_TYPE_CHARACTER,
+			documents.ITEM_TYPE_CHARACTER_IMG_ONLY,
+		},
+	}
+}
+
 func (a *atlasClient) ping(ctx context.Context) error {
 	a.logger.Info("ping")
 	return a.client.Ping(ctx, nil)
@@ -132,7 +150,7 @@ func (a *atlasClient) document(
 	return res, nil
 }
 
-func (a *atlasClient) _textSearch(
+func (a *atlasClient) textSearchDirect(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
@@ -164,10 +182,16 @@ func (a *atlasClient) _textSearch(
 		},
 	}
 
-	if itemType != documents.ITEM_TYPE_UNSPECIFIED {
+	if itemType.IsAnime() {
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": itemType,
+				"item_type": animeItemTypes(),
+			}},
+		})
+	} else if itemType.IsCharacter() {
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"item_type": characterItemTypes(),
 			}},
 		})
 	}
@@ -210,7 +234,7 @@ func (a *atlasClient) textSearch(
 
 	a.logger.Infof("[text] q=%#v", q)
 
-	return a._textSearch(
+	return a.textSearchDirect(
 		ctx,
 		k,
 		q.ItemType,
@@ -218,7 +242,7 @@ func (a *atlasClient) textSearch(
 	)
 }
 
-func (a *atlasClient) _vectorSearch(
+func (a *atlasClient) vectorSearchDirect(
 	ctx context.Context,
 	itemType documents.ItemType,
 	rating documents.Rating,
@@ -252,12 +276,21 @@ func (a *atlasClient) _vectorSearch(
 		srcVec = src
 	}
 
+	var itemMap bson.M
+	if itemType.IsAnime() {
+		itemMap = animeItemTypes()
+	} else if itemType.IsCharacter() {
+		itemMap = characterItemTypes()
+	} else {
+		itemMap = bson.M{"$in": []documents.ItemType{}}
+	}
+
 	p := mongo.Pipeline{
 		{
 			{Key: "$vectorSearch", Value: bson.M{
 				"exact": false,
 				"filter": bson.M{
-					"item_type": itemType,
+					"item_type": itemMap,
 					"rating":    rating,
 				},
 				"index":         "vector",
@@ -301,7 +334,7 @@ func (a *atlasClient) vectorSearch(
 
 	a.logger.Infof("[vector] q=%#v", q)
 
-	return a._vectorSearch(
+	return a.vectorSearchDirect(
 		ctx,
 		q.ItemType,
 		q.Rating,
