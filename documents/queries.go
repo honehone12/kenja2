@@ -12,10 +12,9 @@ const (
 	RATING_ALL_AGES
 	RATING_HENTAI
 )
-const RATING_MAX = RATING_HENTAI
 
 func (r Rating) Ok() error {
-	if r > RATING_MAX {
+	if r > RATING_HENTAI {
 		return errors.New("unexpected rating")
 	}
 
@@ -51,15 +50,24 @@ const (
 	ITEM_TYPE_UNSPECIFIED ItemType = iota
 	ITEM_TYPE_ANIME
 	ITEM_TYPE_CHARACTER
+	ITEM_TYPE_ANIME_IMG_ONLY
+	ITEM_TYPE_CHARACTER_IMG_ONLY
 )
-const ITEM_TYPE_MAX = ITEM_TYPE_CHARACTER
 
 func (i ItemType) Ok() error {
-	if i > ITEM_TYPE_MAX {
+	if i > ITEM_TYPE_CHARACTER_IMG_ONLY {
 		return errors.New("unexpected item type")
 	}
 
 	return nil
+}
+
+func (i ItemType) IsAnime() bool {
+	return i == ITEM_TYPE_ANIME || i == ITEM_TYPE_ANIME_IMG_ONLY
+}
+
+func (i ItemType) IsCharacter() bool {
+	return i == ITEM_TYPE_CHARACTER || i == ITEM_TYPE_CHARACTER_IMG_ONLY
 }
 
 type FunctionId uint32
