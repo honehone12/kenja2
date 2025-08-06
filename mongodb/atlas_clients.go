@@ -156,6 +156,10 @@ func (a *atlasClient) textSearchDirect(
 	itemType documents.ItemType,
 	rating documents.Rating,
 ) (*mongo.Cursor, error) {
+	if rating == documents.RATING_UNSPECIFIED {
+		rating = documents.RATING_ALL_AGES
+	}
+
 	p := mongo.Pipeline{
 		{
 			{Key: "$search", Value: bson.M{
@@ -196,13 +200,11 @@ func (a *atlasClient) textSearchDirect(
 		})
 	}
 
-	if rating != documents.RATING_UNSPECIFIED {
-		p = append(p, bson.D{
-			{Key: "$match", Value: bson.M{
-				"rating": rating,
-			}},
-		})
-	}
+	p = append(p, bson.D{
+		{Key: "$match", Value: bson.M{
+			"rating": rating,
+		}},
+	})
 
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
