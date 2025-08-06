@@ -92,6 +92,19 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*atlasClient, e
 	return connect(uri, maxConn, l)
 }
 
+func fieldFlags() bson.M {
+	return bson.M{
+		"item_type":     1,
+		"rating":        1,
+		"url":           1,
+		"img":           1,
+		"parent":        1,
+		"name":          1,
+		"name_japanese": 1,
+		"name_english":  1,
+	}
+}
+
 func (a *atlasClient) ping(ctx context.Context) error {
 	a.logger.Info("ping")
 	return a.client.Ping(ctx, nil)
@@ -109,14 +122,7 @@ func (a *atlasClient) document(
 	a.logger.Infof("[documet] q=%#v", q)
 
 	f := bson.M{"_id": id}
-	op := options.FindOne().SetProjection(bson.M{
-		"text_vector":  0,
-		"image_vector": 0,
-		"rating":       0,
-		"updated_at":   0,
-		"staff":        0,
-		"description":  0,
-	})
+	op := options.FindOne().SetProjection(fieldFlags())
 
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
@@ -176,15 +182,7 @@ func (a *atlasClient) _textSearch(
 
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
-		bson.D{{Key: "$project", Value: bson.M{
-			"item_type":     1,
-			"url":           1,
-			"img":           1,
-			"parent":        1,
-			"name":          1,
-			"name_japanese": 1,
-			"name_english":  1,
-		}}},
+		bson.D{{Key: "$project", Value: fieldFlags()}},
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
@@ -270,15 +268,7 @@ func (a *atlasClient) _vectorSearch(
 			}},
 		},
 		{
-			{Key: "$project", Value: bson.M{
-				"item_type":     1,
-				"url":           1,
-				"img":           1,
-				"parent":        1,
-				"name":          1,
-				"name_japanese": 1,
-				"name_english":  1,
-			}},
+			{Key: "$project", Value: fieldFlags()},
 		},
 	}
 
