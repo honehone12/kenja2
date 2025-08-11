@@ -155,32 +155,37 @@ func (a *atlasClient) textSearchDirect(
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
 	rating documents.Rating,
+	fuzzy documents.FuzzyKind,
 ) (*mongo.Cursor, error) {
 	if rating == documents.RATING_UNSPECIFIED {
 		rating = documents.RATING_ALL_AGES
 	}
 
+	text := bson.M{
+		"query": keywords,
+		"path": []string{
+			"name",
+			"name_english",
+			"aliases",
+			"studios",
+			"staff",
+			"description",
+			"parent.name",
+		},
+		"matchCriteria": "all",
+	}
+	if fuzzy == documents.FUZZY_USE {
+		text["fuzzy"] = bson.M{
+			"maxEdits":      FUZZY_MAX_EDIT_TO_MATCH,
+			"maxExpansions": FUZZY_MAX_TRY_PER_KW,
+		}
+	}
+
 	p := mongo.Pipeline{
 		{
 			{Key: "$search", Value: bson.M{
-				"index": "text",
-				"text": bson.M{
-					"query": keywords,
-					"fuzzy": bson.M{
-						"maxEdits":      FUZZY_MAX_EDIT_TO_MATCH,
-						"maxExpansions": FUZZY_MAX_TRY_PER_KW,
-					},
-					"path": []string{
-						"name",
-						"name_english",
-						"aliases",
-						"studios",
-						"staff",
-						"description",
-						"parent.name",
-					},
-					"matchCriteria": "all",
-				},
+				"index":              "text",
+				"text":               text,
 				"returnStoredSource": true,
 			}},
 		},
@@ -241,6 +246,7 @@ func (a *atlasClient) textSearch(
 		k,
 		q.ItemType,
 		q.Rating,
+		q.FuzzyKind,
 	)
 }
 
