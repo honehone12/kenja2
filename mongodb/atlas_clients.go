@@ -23,6 +23,9 @@ const ATLAS_KW_LIMIT = 100
 const ATLAS_CURSOR_MAX_AWAIT = time.Second
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
 const FUZZY_MAX_TRY_PER_KW = 100
+const MAX_SINGLE_TKN_FUZZY = 2
+
+var ErrFuzzySingleTknLimit = errors.New("keywords contain too many single tokens")
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -224,6 +227,8 @@ func (a *atlasClient) textSearch(
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) (*mongo.Cursor, error) {
+	a.logger.Infof("[text] q=%#v", q)
+
 	if len(q.Keywords) > ATLAS_KW_LIMIT {
 		return nil, errors.New("unexpected keywords length")
 	}
@@ -237,12 +242,13 @@ func (a *atlasClient) textSearch(
 		return nil, err
 	}
 
-	k := keywords.CleanKeywords(a.replacer, q.Keywords)
+	k, singleTkns := keywords.CleanKeywords(a.replacer, q.Keywords)
+	if q.FuzzyKind == documents.FUZZY_USE && singleTkns > MAX_SINGLE_TKN_FUZZY {
+		return nil, ErrFuzzySingleTknLimit
+	}
 	if len(k) == 0 {
 		return nil, errors.New("invalid keywords")
 	}
-
-	a.logger.Infof("[text] q=%#v", q)
 
 	return a.textSearchDirect(
 		ctx,
@@ -324,6 +330,8 @@ func (a *atlasClient) vectorSearch(
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) (*mongo.Cursor, error) {
+	a.logger.Infof("[vector] q=%#v", q)
+
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
@@ -342,8 +350,6 @@ func (a *atlasClient) vectorSearch(
 	if err != nil {
 		return nil, err
 	}
-
-	a.logger.Infof("[vector] q=%#v", q)
 
 	return a.vectorSearchDirect(
 		ctx,

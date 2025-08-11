@@ -18,12 +18,21 @@ func spaceIsSpace(r rune) rune {
 	}
 }
 
-func CleanKeywords(replacer *strings.Replacer, raw string) Keywords {
+// returns cleaned keywords and the number of single character token
+func CleanKeywords(replacer *strings.Replacer, raw string) (Keywords, int) {
 	s := replacer.Replace(raw)
 	s = strings.Map(spaceIsSpace, s)
 	sep := strings.Split(s, " ")
 	sep = slices.DeleteFunc(sep, func(s string) bool {
 		return len(strings.TrimSpace(s)) == 0
 	})
-	return Keywords(strings.Join(sep, " "))
+
+	singleTkns := 0
+	for _, s := range sep {
+		if len(s) == 1 {
+			singleTkns++
+		}
+	}
+
+	return Keywords(strings.Join(sep, " ")), singleTkns
 }

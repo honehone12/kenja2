@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"kenja2/documents"
 	"kenja2/engine"
 )
@@ -54,7 +55,10 @@ func (a *AtlasBuffer) TextSearch(
 	q *documents.SearchQuery,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.textSearch(ctx, q)
-	if err != nil {
+	if errors.Is(err, ErrFuzzySingleTknLimit) {
+		a.logger.Error(err)
+		return []documents.FlatDocument{}, nil
+	} else if err != nil {
 		return nil, err
 	}
 
