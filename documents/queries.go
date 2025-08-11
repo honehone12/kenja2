@@ -87,6 +87,14 @@ const (
 	FUZZY_USE
 )
 
+func (f FuzzyKind) Ok() error {
+	if f > FUZZY_USE {
+		return errors.New("unexpected fuzzy kind")
+	}
+
+	return nil
+}
+
 type SearchQuery struct {
 	FunctionId  FunctionId  `json:"function_id"`
 	Rating      Rating      `json:"rating"`

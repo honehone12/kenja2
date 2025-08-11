@@ -233,6 +233,9 @@ func (a *atlasClient) textSearch(
 	if err := q.Rating.Ok(); err != nil {
 		return nil, err
 	}
+	if err := q.FuzzyKind.Ok(); err != nil {
+		return nil, err
+	}
 
 	k := keywords.CleanKeywords(a.replacer, q.Keywords)
 	if len(k) == 0 {
