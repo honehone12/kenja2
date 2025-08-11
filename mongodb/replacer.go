@@ -21,4 +21,5 @@ var __MONGO_REPLACER = strings.NewReplacer(
 	"`", keywords.PLACE_HOLDER,
 	"'", keywords.PLACE_HOLDER,
 	`"`, keywords.PLACE_HOLDER,
+	`\`, keywords.PLACE_HOLDER,
 )
