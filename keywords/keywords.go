@@ -8,7 +8,8 @@ import (
 
 type Keywords string
 
-const PLACE_HOLDER = ""
+const PLACE_HOLDER_NONE = ""
+const PLACE_HOLDER_SPACE = " "
 
 func spaceIsSpace(r rune) rune {
 	if unicode.IsSpace(r) {
