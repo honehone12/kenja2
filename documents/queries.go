@@ -80,6 +80,21 @@ const (
 	FID_VECTORSEARCH_BUFFER
 )
 
+type FuzzyKind uint32
+
+const (
+	FUZZY_UNSPECIFIED = iota
+	FUZZY_USE
+)
+
+func (f FuzzyKind) Ok() error {
+	if f > FUZZY_USE {
+		return errors.New("unexpected fuzzy kind")
+	}
+
+	return nil
+}
+
 type SearchQuery struct {
 	FunctionId  FunctionId  `json:"function_id"`
 	Rating      Rating      `json:"rating"`
@@ -87,6 +102,7 @@ type SearchQuery struct {
 	VectorField VectorField `json:"vector_field"`
 	Id          string      `json:"id"`
 	Keywords    string      `json:"keywords"`
+	FuzzyKind   FuzzyKind   `json:"fuzzy_kind"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {
