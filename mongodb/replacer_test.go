@@ -7,31 +7,31 @@ import (
 
 func TestMongoKeywords(t *testing.T) {
 	s := "$.,{}[]():;/`"
-	clean, _ := keywords.CleanKeywords(__MONGO_REPLACER, s)
+	clean, _ := keywords.CleanKeywords(__mongo_replacer, s)
 	if clean != "" {
 		panic("replacer fail")
 	}
 
 	s = `"'`
-	clean, _ = keywords.CleanKeywords(__MONGO_REPLACER, s)
+	clean, _ = keywords.CleanKeywords(__mongo_replacer, s)
 	if clean != "" {
 		panic("replacer fail")
 	}
 
 	s = "  a  b    c         de "
-	clean, _ = keywords.CleanKeywords(__MONGO_REPLACER, s)
+	clean, _ = keywords.CleanKeywords(__mongo_replacer, s)
 	if clean != "a b c de" {
 		panic("replacer fail")
 	}
 
 	s = "\ta\nb \vc\fd\r\ne"
-	clean, _ = keywords.CleanKeywords(__MONGO_REPLACER, s)
+	clean, _ = keywords.CleanKeywords(__mongo_replacer, s)
 	if clean != "a b c d e" {
 		panic("replacer fail")
 	}
 
 	s = "school music band club"
-	clean, _ = keywords.CleanKeywords(__MONGO_REPLACER, s)
+	clean, _ = keywords.CleanKeywords(__mongo_replacer, s)
 	if clean != "school music band club" {
 		panic("breaking keywords")
 	}
