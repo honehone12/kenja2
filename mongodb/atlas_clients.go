@@ -54,7 +54,7 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 		database:   d,
 		collection: c,
 		logger:     l,
-		replacer:   __MONGO_REPLACER,
+		replacer:   __mongoReplacer,
 	}, nil
 }
 

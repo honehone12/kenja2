@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var __MONGO_REPLACER = strings.NewReplacer(
+var __mongoReplacer = strings.NewReplacer(
 	"/", keywords.PLACE_HOLDER_SPACE,
 	"$", keywords.PLACE_HOLDER_NONE,
 	".", keywords.PLACE_HOLDER_NONE,
