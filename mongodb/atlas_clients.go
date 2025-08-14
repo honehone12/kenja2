@@ -259,38 +259,15 @@ func (a *atlasClient) textSearch(
 	)
 }
 
-func (a *atlasClient) vectorSearchDirect(
+func (a *atlasClient) vectorSearchDirectSrc(
 	ctx context.Context,
 	itemType documents.ItemType,
 	rating documents.Rating,
-	id bson.ObjectID,
-	vField documents.VectorField,
 	vFieldName documents.VFieldName,
+	srcVec bson.Binary,
 ) (*mongo.Cursor, error) {
 	if rating == documents.RATING_UNSPECIFIED {
 		rating = documents.RATING_ALL_AGES
-	}
-
-	var srcVec bson.Binary
-	{
-		f := bson.D{{Key: "_id", Value: id}}
-		op := options.FindOne().SetProjection(bson.M{
-			string(vFieldName): 1,
-		})
-		res := a.collection.FindOne(ctx, f, op)
-		if res.Err() != nil {
-			return nil, res.Err()
-		}
-		v := documents.Vector{}
-		if err := res.Decode(&v); err != nil {
-			return nil, err
-		}
-
-		src, err := v.Binary(vField)
-		if err != nil {
-			return nil, err
-		}
-		srcVec = src
 	}
 
 	var itemMap bson.M
@@ -324,6 +301,35 @@ func (a *atlasClient) vectorSearchDirect(
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
 	return a.collection.Aggregate(ctx, p, op)
+}
+
+func (a *atlasClient) vectorSearchDirect(
+	ctx context.Context,
+	itemType documents.ItemType,
+	rating documents.Rating,
+	id bson.ObjectID,
+	vField documents.VectorField,
+	vFieldName documents.VFieldName,
+) (*mongo.Cursor, error) {
+	f := bson.D{{Key: "_id", Value: id}}
+	op := options.FindOne().SetProjection(bson.M{
+		string(vFieldName): 1,
+	})
+	res := a.collection.FindOne(ctx, f, op)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+	v := documents.Vector{}
+	if err := res.Decode(&v); err != nil {
+		return nil, err
+	}
+
+	srcVec, err := v.Binary(vField)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.vectorSearchDirectSrc(ctx, itemType, rating, vFieldName, srcVec)
 }
 
 func (a *atlasClient) vectorSearch(
