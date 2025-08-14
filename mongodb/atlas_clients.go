@@ -276,7 +276,7 @@ func (a *atlasClient) vectorSearchDirectSrc(
 	} else if itemType.IsCharacter() {
 		itemMap = characterItemTypes()
 	} else {
-		itemMap = bson.M{"$in": []documents.ItemType{}}
+		return nil, fmt.Errorf("unexpected item type: %d", itemType)
 	}
 
 	p := mongo.Pipeline{
