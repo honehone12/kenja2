@@ -86,7 +86,3 @@ func (a *AtlasBuffer) VectorSeach(
 
 	return docs, nil
 }
-
-func (a *AtlasBuffer) Close(ctx context.Context) error {
-	return a.client.Disconnect(ctx)
-}

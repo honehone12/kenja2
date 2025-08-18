@@ -19,8 +19,7 @@ type result struct {
 	Results []string `json:"results"`
 }
 
-func run(a *mongodb.AtlasClient) error {
-	ctx := context.Background()
+func run(ctx context.Context, a *mongodb.AtlasClient) error {
 	res := []result{}
 
 	for k, v := range emood.EmoodTextMap {
@@ -106,12 +105,18 @@ func main() {
 		l.Fatal("env for search engine uri is not set")
 	}
 
+	ctx := context.Background()
 	atlas, err := mongodb.DirectConnect(uri, 3, l)
 	if err != nil {
 		l.Fatal(err)
 	}
+	defer func() {
+		if err := atlas.Close(ctx); err != nil {
+			l.Error(err)
+		}
+	}()
 
-	if err := run(atlas); err != nil {
+	if err := run(ctx, atlas); err != nil {
 		l.Fatal(err)
 	}
 }

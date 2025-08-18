@@ -378,6 +378,13 @@ func (a *AtlasClient) vectorSearch(
 		q.VectorField,
 		vFieldName,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return a.UnsafeVectorSearch(ctx, q.ItemType, q.Rating, vFieldName, v)
+}
+
+func (a *AtlasClient) Close(ctx context.Context) error {
+	return a.client.Disconnect(ctx)
 }
