@@ -108,7 +108,7 @@ func fieldFlags() bson.M {
 	}
 }
 
-func animeItemTypes() bson.M {
+func animeITypeFilter() bson.M {
 	return bson.M{
 		"$in": []documents.ItemType{
 			documents.ITEM_TYPE_ANIME,
@@ -117,9 +117,20 @@ func animeItemTypes() bson.M {
 	}
 }
 
-func characterItemTypes() bson.M {
+func characterITypeFilter() bson.M {
 	return bson.M{
 		"$in": []documents.ItemType{
+			documents.ITEM_TYPE_CHARACTER,
+			documents.ITEM_TYPE_CHARACTER_IMG_ONLY,
+		},
+	}
+}
+
+func animeAndCharacterITypeFilter() bson.M {
+	return bson.M{
+		"$in": []documents.ItemType{
+			documents.ITEM_TYPE_ANIME,
+			documents.ITEM_TYPE_ANIME_IMG_ONLY,
 			documents.ITEM_TYPE_CHARACTER,
 			documents.ITEM_TYPE_CHARACTER_IMG_ONLY,
 		},
@@ -197,13 +208,19 @@ func (a *atlasClient) textSearchDirect(
 	if itemType.IsAnime() {
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": animeItemTypes(),
+				"item_type": animeITypeFilter(),
 			}},
 		})
 	} else if itemType.IsCharacter() {
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": characterItemTypes(),
+				"item_type": characterITypeFilter(),
+			}},
+		})
+	} else {
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"item_type": animeAndCharacterITypeFilter(),
 			}},
 		})
 	}
@@ -272,9 +289,9 @@ func (a *atlasClient) vectorSearchDirectSrc(
 
 	var itemMap bson.M
 	if itemType.IsAnime() {
-		itemMap = animeItemTypes()
+		itemMap = animeITypeFilter()
 	} else if itemType.IsCharacter() {
-		itemMap = characterItemTypes()
+		itemMap = characterITypeFilter()
 	} else {
 		return nil, fmt.Errorf("unexpected item type: %d", itemType)
 	}
