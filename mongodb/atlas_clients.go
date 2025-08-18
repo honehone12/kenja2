@@ -58,7 +58,7 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 	}, nil
 }
 
-func connect(uri string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
+func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
 	ops := options.Client().
 		ApplyURI(uri).
 		SetMaxPoolSize(maxConn).
@@ -92,7 +92,7 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*atlasClient, e
 		url.QueryEscape(secretKey),
 		url.QueryEscape(tkn),
 	)
-	return connect(uri, maxConn, l)
+	return DirectConnect(uri, maxConn, l)
 }
 
 func fieldFlags() bson.M {
@@ -164,7 +164,7 @@ func (a *atlasClient) document(
 	return res, nil
 }
 
-func (a *atlasClient) textSearchDirect(
+func (a *atlasClient) UnsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
@@ -267,7 +267,7 @@ func (a *atlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
-	return a.textSearchDirect(
+	return a.UnsafeTextSearch(
 		ctx,
 		k,
 		q.ItemType,
@@ -276,7 +276,7 @@ func (a *atlasClient) textSearch(
 	)
 }
 
-func (a *atlasClient) vectorSearchDirectSrc(
+func (a *atlasClient) UnsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
 	rating documents.Rating,
@@ -320,33 +320,31 @@ func (a *atlasClient) vectorSearchDirectSrc(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *atlasClient) vectorSearchDirect(
+func (a *atlasClient) queryVector(
 	ctx context.Context,
-	itemType documents.ItemType,
-	rating documents.Rating,
 	id bson.ObjectID,
 	vField documents.VectorField,
 	vFieldName documents.VFieldName,
-) (*mongo.Cursor, error) {
+) (bson.Binary, error) {
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
 		string(vFieldName): 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
-		return nil, res.Err()
+		return bson.Binary{}, res.Err()
 	}
 	v := documents.Vector{}
 	if err := res.Decode(&v); err != nil {
-		return nil, err
+		return bson.Binary{}, err
 	}
 
-	srcVec, err := v.Binary(vField)
+	b, err := v.Binary(vField)
 	if err != nil {
-		return nil, err
+		return bson.Binary{}, err
 	}
 
-	return a.vectorSearchDirectSrc(ctx, itemType, rating, vFieldName, srcVec)
+	return b, nil
 }
 
 func (a *atlasClient) vectorSearch(
@@ -374,12 +372,12 @@ func (a *atlasClient) vectorSearch(
 		return nil, err
 	}
 
-	return a.vectorSearchDirect(
+	v, err := a.queryVector(
 		ctx,
-		q.ItemType,
-		q.Rating,
 		id,
 		q.VectorField,
 		vFieldName,
 	)
+
+	return a.UnsafeVectorSearch(ctx, q.ItemType, q.Rating, vFieldName, v)
 }
