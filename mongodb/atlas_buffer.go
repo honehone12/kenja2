@@ -8,25 +8,25 @@ import (
 )
 
 type AtlasBuffer struct {
-	*atlasClient
+	*AtlasClient
 }
 
 func Connect(uri string, maxConn uint64, logger engine.Logger) (*AtlasBuffer, error) {
-	mongoClient, err := connect(uri, maxConn, logger)
+	atlasClient, err := DirectConnect(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer{atlasClient: mongoClient}, nil
+	return &AtlasBuffer{atlasClient}, nil
 }
 
 func ConnectAws(uri string, maxConn uint64, logger engine.Logger) (*AtlasBuffer, error) {
-	mongoClient, err := connectAws(uri, maxConn, logger)
+	atlasClient, err := connectAws(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer{atlasClient: mongoClient}, nil
+	return &AtlasBuffer{atlasClient}, nil
 }
 
 func (a *AtlasBuffer) Ping(ctx context.Context) error {
