@@ -27,7 +27,7 @@ const MAX_SINGLE_TKN_FUZZY = 2
 
 var ErrFuzzySingleTknLimit = errors.New("keywords contain too many single tokens")
 
-type atlasClient struct {
+type AtlasClient struct {
 	client     *mongo.Client
 	database   *mongo.Database
 	collection *mongo.Collection
@@ -36,7 +36,7 @@ type atlasClient struct {
 	replacer *strings.Replacer
 }
 
-func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
+func newAtlasClient(m *mongo.Client, l engine.Logger) (*AtlasClient, error) {
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
@@ -49,7 +49,7 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 	d := m.Database(db)
 	c := d.Collection(cl)
 
-	return &atlasClient{
+	return &AtlasClient{
 		client:     m,
 		database:   d,
 		collection: c,
@@ -58,7 +58,7 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*atlasClient, error) {
 	}, nil
 }
 
-func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
+func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
 	ops := options.Client().
 		ApplyURI(uri).
 		SetMaxPoolSize(maxConn).
@@ -72,7 +72,7 @@ func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*atlasClient, e
 	return newAtlasClient(m, l)
 }
 
-func connectAws(format string, maxConn uint64, l engine.Logger) (*atlasClient, error) {
+func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
@@ -137,12 +137,12 @@ func animeAndCharacterITypeFilter() bson.M {
 	}
 }
 
-func (a *atlasClient) ping(ctx context.Context) error {
+func (a *AtlasClient) ping(ctx context.Context) error {
 	a.logger.Info("ping")
 	return a.client.Ping(ctx, nil)
 }
 
-func (a *atlasClient) document(
+func (a *AtlasClient) document(
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) (*mongo.SingleResult, error) {
@@ -164,7 +164,7 @@ func (a *atlasClient) document(
 	return res, nil
 }
 
-func (a *atlasClient) UnsafeTextSearch(
+func (a *AtlasClient) UnsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
@@ -240,7 +240,7 @@ func (a *atlasClient) UnsafeTextSearch(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *atlasClient) textSearch(
+func (a *AtlasClient) textSearch(
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) (*mongo.Cursor, error) {
@@ -276,7 +276,7 @@ func (a *atlasClient) textSearch(
 	)
 }
 
-func (a *atlasClient) UnsafeVectorSearch(
+func (a *AtlasClient) UnsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
 	rating documents.Rating,
@@ -320,7 +320,7 @@ func (a *atlasClient) UnsafeVectorSearch(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *atlasClient) queryVector(
+func (a *AtlasClient) queryVector(
 	ctx context.Context,
 	id bson.ObjectID,
 	vField documents.VectorField,
@@ -347,7 +347,7 @@ func (a *atlasClient) queryVector(
 	return b, nil
 }
 
-func (a *atlasClient) vectorSearch(
+func (a *AtlasClient) vectorSearch(
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) (*mongo.Cursor, error) {

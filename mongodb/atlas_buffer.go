@@ -8,7 +8,7 @@ import (
 )
 
 type AtlasBuffer struct {
-	*atlasClient
+	*AtlasClient
 }
 
 func Connect(uri string, maxConn uint64, logger engine.Logger) (*AtlasBuffer, error) {
