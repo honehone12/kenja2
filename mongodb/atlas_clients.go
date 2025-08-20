@@ -181,8 +181,6 @@ func (a *AtlasClient) UnsafeTextSearch(
 			"name",
 			"name_english",
 			"aliases",
-			"studios",
-			"staff",
 			"description",
 			"parent.name",
 		},
