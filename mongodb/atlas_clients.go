@@ -157,7 +157,6 @@ func (a *AtlasClient) UnsafeTextSearch(
 			"name",
 			"name_english",
 			"aliases",
-			"description",
 			"parent.name",
 		},
 		"matchCriteria": "all",
