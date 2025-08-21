@@ -156,8 +156,10 @@ func (a *AtlasClient) UnsafeTextSearch(
 		"path": []string{
 			"name",
 			"name_english",
+			"name_japanese",
 			"aliases",
 			"parent.name",
+			"parent.name_japanese",
 		},
 		"matchCriteria": "all",
 	}
