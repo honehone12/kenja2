@@ -17,13 +17,13 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const ATLAS_SEARCH_SIZE = 100
+const ATLAS_SEARCH_SIZE = 50
 const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 120
 const ATLAS_CURSOR_MAX_AWAIT = time.Second
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
-const FUZZY_MAX_TRY_PER_KW = 100
-const MAX_SINGLE_TKN_FUZZY = 2
+const FUZZY_MAX_TRY_PER_KW = 50
+const MAX_SINGLE_TKN_FUZZY = 3
 
 var ErrFuzzySingleTknLimit = errors.New("keywords contain too many single tokens")
 
