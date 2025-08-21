@@ -32,23 +32,14 @@ type SearchResult struct {
 	Documents []FlatDocument `json:"documents,omitempty"`
 }
 
-type Vector struct {
+type ImageVector struct {
 	ImageVector bson.Vector `bson:"image_vector"`
 }
 
-func (v *Vector) Binary(field VectorField) (bson.Binary, error) {
-	var b bson.Binary
-	switch field {
-	case VFIELD_IMG:
-		b = v.ImageVector.Binary()
-	// add fields here when use
-	default:
-		return b, errors.New("unexpected field")
-	}
-
+func (v *ImageVector) Binary() (bson.Binary, error) {
+	b := v.ImageVector.Binary()
 	if b.IsZero() {
-		return b, errors.New("specified field is empty")
+		return b, errors.New("iamge vector fiel is empty")
 	}
-
 	return b, nil
 }

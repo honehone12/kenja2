@@ -2,6 +2,7 @@ package documents
 
 import (
 	"errors"
+	"fmt"
 	"math/bits"
 )
 
@@ -9,15 +10,14 @@ type Rating uint32
 
 const (
 	RATING_UNSPECIFIED Rating = iota
-	RATING_ALL_AGES
-	RATING_HENTAI
+	RATING_G
+	RATING_X
 )
 
 func (r Rating) Ok() error {
-	if r > RATING_HENTAI {
-		return errors.New("unexpected rating")
+	if r > RATING_X {
+		return fmt.Errorf("unexpected rating: %d", r)
 	}
-
 	return nil
 }
 
@@ -26,19 +26,13 @@ type VFieldName string
 
 const (
 	VFIELD_UNSPECIFIED VectorField = iota
-	VFIELD_TXT
 	VFIELD_IMG
-	VFIELD_STF
 )
 
 func (f VectorField) Name() (VFieldName, error) {
 	switch f {
-	case VFIELD_TXT:
-		return "text_vector", nil
 	case VFIELD_IMG:
 		return "image_vector", nil
-	case VFIELD_STF:
-		return "staff_vector", nil
 	default:
 		return "", errors.New("unexpected vector fields option")
 	}
@@ -50,24 +44,13 @@ const (
 	ITEM_TYPE_UNSPECIFIED ItemType = iota
 	ITEM_TYPE_ANIME
 	ITEM_TYPE_CHARACTER
-	ITEM_TYPE_ANIME_IMG_ONLY
-	ITEM_TYPE_CHARACTER_IMG_ONLY
 )
 
 func (i ItemType) Ok() error {
-	if i > ITEM_TYPE_CHARACTER_IMG_ONLY {
-		return errors.New("unexpected item type")
+	if i > ITEM_TYPE_CHARACTER {
+		return fmt.Errorf("unexpected item type: %d", i)
 	}
-
 	return nil
-}
-
-func (i ItemType) IsAnime() bool {
-	return i == ITEM_TYPE_ANIME || i == ITEM_TYPE_ANIME_IMG_ONLY
-}
-
-func (i ItemType) IsCharacter() bool {
-	return i == ITEM_TYPE_CHARACTER || i == ITEM_TYPE_CHARACTER_IMG_ONLY
 }
 
 type FunctionId uint32
@@ -89,9 +72,8 @@ const (
 
 func (f FuzzyKind) Ok() error {
 	if f > FUZZY_USE {
-		return errors.New("unexpected fuzzy kind")
+		return fmt.Errorf("unexpected fuzzy kind: %d", f)
 	}
-
 	return nil
 }
 

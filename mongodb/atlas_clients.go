@@ -108,31 +108,11 @@ func fieldFlags() bson.M {
 	}
 }
 
-func animeITypeFilter() bson.M {
-	return bson.M{
-		"$in": []documents.ItemType{
-			documents.ITEM_TYPE_ANIME,
-			documents.ITEM_TYPE_ANIME_IMG_ONLY,
-		},
-	}
-}
-
-func characterITypeFilter() bson.M {
-	return bson.M{
-		"$in": []documents.ItemType{
-			documents.ITEM_TYPE_CHARACTER,
-			documents.ITEM_TYPE_CHARACTER_IMG_ONLY,
-		},
-	}
-}
-
 func animeAndCharacterITypeFilter() bson.M {
 	return bson.M{
 		"$in": []documents.ItemType{
 			documents.ITEM_TYPE_ANIME,
-			documents.ITEM_TYPE_ANIME_IMG_ONLY,
 			documents.ITEM_TYPE_CHARACTER,
-			documents.ITEM_TYPE_CHARACTER_IMG_ONLY,
 		},
 	}
 }
@@ -171,10 +151,6 @@ func (a *AtlasClient) UnsafeTextSearch(
 	rating documents.Rating,
 	fuzzy documents.FuzzyKind,
 ) (*mongo.Cursor, error) {
-	if rating == documents.RATING_UNSPECIFIED {
-		rating = documents.RATING_ALL_AGES
-	}
-
 	text := bson.M{
 		"query": keywords,
 		"path": []string{
@@ -203,19 +179,20 @@ func (a *AtlasClient) UnsafeTextSearch(
 		},
 	}
 
-	if itemType.IsAnime() {
+	switch itemType {
+	case documents.ITEM_TYPE_ANIME:
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": animeITypeFilter(),
+				"item_type": documents.ITEM_TYPE_ANIME,
 			}},
 		})
-	} else if itemType.IsCharacter() {
+	case documents.ITEM_TYPE_CHARACTER:
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": characterITypeFilter(),
+				"item_type": documents.ITEM_TYPE_CHARACTER,
 			}},
 		})
-	} else {
+	default:
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
 				"item_type": animeAndCharacterITypeFilter(),
@@ -265,6 +242,10 @@ func (a *AtlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
+	if q.Rating == documents.RATING_UNSPECIFIED {
+		q.Rating = documents.RATING_G
+	}
+
 	return a.UnsafeTextSearch(
 		ctx,
 		k,
@@ -281,27 +262,27 @@ func (a *AtlasClient) UnsafeVectorSearch(
 	vFieldName documents.VFieldName,
 	srcVec bson.Binary,
 ) (*mongo.Cursor, error) {
-	if rating == documents.RATING_UNSPECIFIED {
-		rating = documents.RATING_ALL_AGES
-	}
-
-	var itemMap bson.M
-	if itemType.IsAnime() {
-		itemMap = animeITypeFilter()
-	} else if itemType.IsCharacter() {
-		itemMap = characterITypeFilter()
-	} else {
+	var filter bson.M
+	switch itemType {
+	case documents.ITEM_TYPE_ANIME:
+		filter = bson.M{
+			"item_type": documents.ITEM_TYPE_ANIME,
+			"rating":    rating,
+		}
+	case documents.ITEM_TYPE_CHARACTER:
+		filter = bson.M{
+			"item_type": documents.ITEM_TYPE_CHARACTER,
+			"rating":    rating,
+		}
+	default:
 		return nil, fmt.Errorf("unexpected item type: %d", itemType)
 	}
 
 	p := mongo.Pipeline{
 		{
 			{Key: "$vectorSearch", Value: bson.M{
-				"exact": false,
-				"filter": bson.M{
-					"item_type": itemMap,
-					"rating":    rating,
-				},
+				"exact":         false,
+				"filter":        filter,
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
 				"numCandidates": ATLAS_SEARCH_SIZE * ATLAS_SEARCH_LIMIT,
@@ -321,25 +302,34 @@ func (a *AtlasClient) UnsafeVectorSearch(
 func (a *AtlasClient) queryVector(
 	ctx context.Context,
 	id bson.ObjectID,
-	vField documents.VectorField,
 	vFieldName documents.VFieldName,
 ) (bson.Binary, error) {
+	var b bson.Binary
+
+	// add vector field names when use
+	if vFieldName != "image_vector" {
+		return b, fmt.Errorf("unexpected vector field: %s", vFieldName)
+	}
+
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
 		string(vFieldName): 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
-		return bson.Binary{}, res.Err()
-	}
-	v := documents.Vector{}
-	if err := res.Decode(&v); err != nil {
-		return bson.Binary{}, err
+		return b, res.Err()
 	}
 
-	b, err := v.Binary(vField)
-	if err != nil {
-		return bson.Binary{}, err
+	if vFieldName == "image_vector" {
+		v := documents.ImageVector{}
+		err := res.Decode(&v)
+		if err != nil {
+			return b, err
+		}
+		b, err = v.Binary()
+		if err != nil {
+			return b, err
+		}
 	}
 
 	return b, nil
@@ -351,9 +341,6 @@ func (a *AtlasClient) vectorSearch(
 ) (*mongo.Cursor, error) {
 	a.logger.Infof("[vector] q=%#v", q)
 
-	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
-		return nil, errors.New("vector search requires item type")
-	}
 	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
@@ -365,17 +352,23 @@ func (a *AtlasClient) vectorSearch(
 	if err != nil {
 		return nil, err
 	}
+
+	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
+	if q.Rating == documents.RATING_UNSPECIFIED {
+		q.Rating = documents.RATING_G
+	}
+	if q.VectorField == documents.VFIELD_UNSPECIFIED {
+		q.VectorField = documents.VFIELD_IMG
+	}
+
 	vFieldName, err := q.VectorField.Name()
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := a.queryVector(
-		ctx,
-		id,
-		q.VectorField,
-		vFieldName,
-	)
+	v, err := a.queryVector(ctx, id, vFieldName)
 	if err != nil {
 		return nil, err
 	}
