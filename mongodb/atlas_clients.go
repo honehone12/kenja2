@@ -95,16 +95,10 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, e
 	return DirectConnect(uri, maxConn, l)
 }
 
-func fieldFlags() bson.M {
+func fieldProjectionFlags() bson.M {
 	return bson.M{
-		"item_type":     1,
-		"rating":        1,
-		"url":           1,
-		"img":           1,
-		"parent":        1,
-		"name":          1,
-		"name_japanese": 1,
-		"name_english":  1,
+		"updated_at":   0,
+		"image_vector": 0,
 	}
 }
 
@@ -134,7 +128,7 @@ func (a *AtlasClient) document(
 	a.logger.Infof("[documet] q=%#v", q)
 
 	f := bson.M{"_id": id}
-	op := options.FindOne().SetProjection(fieldFlags())
+	op := options.FindOne().SetProjection(fieldProjectionFlags())
 
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
@@ -201,7 +195,7 @@ func (a *AtlasClient) UnsafeTextSearch(
 
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
-		bson.D{{Key: "$project", Value: fieldFlags()}},
+		bson.D{{Key: "$project", Value: fieldProjectionFlags()}},
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
@@ -273,7 +267,7 @@ func (a *AtlasClient) UnsafeVectorSearch(
 			}},
 		},
 		{
-			{Key: "$project", Value: fieldFlags()},
+			{Key: "$project", Value: fieldProjectionFlags()},
 		},
 	}
 
