@@ -1,27 +1,9 @@
 package documents
 
 import (
-	"errors"
 	"fmt"
 	"math/bits"
 )
-
-type VectorField uint32
-type VFieldName string
-
-const (
-	VFIELD_UNSPECIFIED VectorField = iota
-	VFIELD_IMG
-)
-
-func (f VectorField) Name() (VFieldName, error) {
-	switch f {
-	case VFIELD_IMG:
-		return "image_vector", nil
-	default:
-		return "", errors.New("unexpected vector fields option")
-	}
-}
 
 type ItemType uint32
 
@@ -65,12 +47,11 @@ func (f FuzzyKind) Ok() error {
 }
 
 type SearchQuery struct {
-	FunctionId  FunctionId  `json:"function_id"`
-	ItemType    ItemType    `json:"item_type"`
-	VectorField VectorField `json:"vector_field"`
-	Id          string      `json:"id"`
-	Keywords    string      `json:"keywords"`
-	FuzzyKind   FuzzyKind   `json:"fuzzy_kind"`
+	FunctionId FunctionId `json:"function_id"`
+	ItemType   ItemType   `json:"item_type"`
+	Id         string     `json:"id"`
+	Keywords   string     `json:"keywords"`
+	FuzzyKind  FuzzyKind  `json:"fuzzy_kind"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {

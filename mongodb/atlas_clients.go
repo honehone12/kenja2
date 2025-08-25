@@ -237,7 +237,6 @@ func (a *AtlasClient) textSearch(
 func (a *AtlasClient) UnsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
-	vFieldName documents.VFieldName,
 	srcVec bson.Binary,
 ) (*mongo.Cursor, error) {
 	var filter bson.M
@@ -262,7 +261,7 @@ func (a *AtlasClient) UnsafeVectorSearch(
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
 				"numCandidates": ATLAS_SEARCH_SIZE * ATLAS_SEARCH_LIMIT,
-				"path":          vFieldName,
+				"path":          "image_vector",
 				"queryVector":   srcVec,
 			}},
 		},
@@ -278,34 +277,26 @@ func (a *AtlasClient) UnsafeVectorSearch(
 func (a *AtlasClient) queryVector(
 	ctx context.Context,
 	id bson.ObjectID,
-	vFieldName documents.VFieldName,
 ) (bson.Binary, error) {
 	var b bson.Binary
 
-	// add vector field names when use
-	if vFieldName != "image_vector" {
-		return b, fmt.Errorf("unexpected vector field: %s", vFieldName)
-	}
-
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
-		string(vFieldName): 1,
+		"image_vector": 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
 		return b, res.Err()
 	}
 
-	if vFieldName == "image_vector" {
-		v := documents.ImageVector{}
-		err := res.Decode(&v)
-		if err != nil {
-			return b, err
-		}
-		b, err = v.Binary()
-		if err != nil {
-			return b, err
-		}
+	v := documents.ImageVector{}
+	err := res.Decode(&v)
+	if err != nil {
+		return b, err
+	}
+	b, err = v.Binary()
+	if err != nil {
+		return b, err
 	}
 
 	return b, nil
@@ -329,21 +320,13 @@ func (a *AtlasClient) vectorSearch(
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
-	if q.VectorField == documents.VFIELD_UNSPECIFIED {
-		q.VectorField = documents.VFIELD_IMG
-	}
 
-	vFieldName, err := q.VectorField.Name()
+	v, err := a.queryVector(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := a.queryVector(ctx, id, vFieldName)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.UnsafeVectorSearch(ctx, q.ItemType, vFieldName, v)
+	return a.UnsafeVectorSearch(ctx, q.ItemType, v)
 }
 
 func (a *AtlasClient) Close(ctx context.Context) error {
