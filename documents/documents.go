@@ -9,11 +9,12 @@ import (
 type FlatDocument struct {
 	Id           bson.ObjectID `json:"id" bson:"_id"`
 	ItemType     ItemType      `json:"item_type" bson:"item_type"`
-	Rating       Rating        `json:"rating" bson:"rating"`
-	Url          string        `json:"url" bson:"url"`
-	Img          string        `json:"img" bson:"img"`
-	Parent       Parent        `json:"parent,omitzero" bson:"parent"`
-	Name         string        `json:"name" bson:"name"`
+	Url          string        `json:"url,omitempty" bson:"url"`
+	Img          string        `json:"img,omitempty" bson:"img"`
+	License      []string      `json:"license,omitempty" bson:"license"`
+	Src          string        `json:"src,omitempty" bson:"src"`
+	Parent       *Parent       `json:"parent,omitempty" bson:"parent"`
+	Name         string        `json:"name,omitempty" bson:"name"`
 	NameEnglish  string        `json:"name_english,omitempty" bson:"name_english"`
 	NameJapanese string        `json:"name_japanese,omitempty" bson:"name_japanese"`
 }
