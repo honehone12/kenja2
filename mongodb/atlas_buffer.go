@@ -16,7 +16,7 @@ func Connect(
 	maxConn uint64,
 	logger engine.Logger,
 ) (*AtlasBuffer, error) {
-	atlasClient, err := DirectConnect(uri, maxConn, logger)
+	atlasClient, err := connect(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}

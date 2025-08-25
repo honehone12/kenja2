@@ -36,7 +36,10 @@ type AtlasClient struct {
 	replacer *strings.Replacer
 }
 
-func newAtlasClient(m *mongo.Client, l engine.Logger) (*AtlasClient, error) {
+func newAtlasClient(
+	m *mongo.Client,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
@@ -58,7 +61,11 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*AtlasClient, error) {
 	}, nil
 }
 
-func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
+func connect(
+	uri string,
+	maxConn uint64,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	ops := options.Client().
 		ApplyURI(uri).
 		SetMaxPoolSize(maxConn).
@@ -72,7 +79,11 @@ func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*AtlasClient, e
 	return newAtlasClient(m, l)
 }
 
-func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
+func connectAws(
+	format string,
+	maxConn uint64,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
@@ -92,7 +103,7 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, e
 		url.QueryEscape(secretKey),
 		url.QueryEscape(tkn),
 	)
-	return DirectConnect(uri, maxConn, l)
+	return connect(uri, maxConn, l)
 }
 
 func fieldProjectionFlags() bson.M {
@@ -138,7 +149,7 @@ func (a *AtlasClient) document(
 	return res, nil
 }
 
-func (a *AtlasClient) UnsafeTextSearch(
+func (a *AtlasClient) unsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
@@ -226,7 +237,7 @@ func (a *AtlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
-	return a.UnsafeTextSearch(
+	return a.unsafeTextSearch(
 		ctx,
 		k,
 		q.ItemType,
@@ -234,7 +245,7 @@ func (a *AtlasClient) textSearch(
 	)
 }
 
-func (a *AtlasClient) UnsafeVectorSearch(
+func (a *AtlasClient) unsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
 	srcVec bson.Binary,
@@ -326,7 +337,7 @@ func (a *AtlasClient) vectorSearch(
 		return nil, err
 	}
 
-	return a.UnsafeVectorSearch(ctx, q.ItemType, v)
+	return a.unsafeVectorSearch(ctx, q.ItemType, v)
 }
 
 func (a *AtlasClient) Close(ctx context.Context) error {
