@@ -6,21 +6,6 @@ import (
 	"math/bits"
 )
 
-type Rating uint32
-
-const (
-	RATING_UNSPECIFIED Rating = iota
-	RATING_G
-	RATING_X
-)
-
-func (r Rating) Ok() error {
-	if r > RATING_X {
-		return fmt.Errorf("unexpected rating: %d", r)
-	}
-	return nil
-}
-
 type VectorField uint32
 type VFieldName string
 
@@ -44,10 +29,12 @@ const (
 	ITEM_TYPE_UNSPECIFIED ItemType = iota
 	ITEM_TYPE_ANIME
 	ITEM_TYPE_CHARACTER
+	ITEM_TYPE_Picture
+	ITEM_TYPE_YVIDEO
 )
 
 func (i ItemType) Ok() error {
-	if i > ITEM_TYPE_CHARACTER {
+	if i > ITEM_TYPE_YVIDEO {
 		return fmt.Errorf("unexpected item type: %d", i)
 	}
 	return nil
@@ -79,7 +66,6 @@ func (f FuzzyKind) Ok() error {
 
 type SearchQuery struct {
 	FunctionId  FunctionId  `json:"function_id"`
-	Rating      Rating      `json:"rating"`
 	ItemType    ItemType    `json:"item_type"`
 	VectorField VectorField `json:"vector_field"`
 	Id          string      `json:"id"`

@@ -148,7 +148,6 @@ func (a *AtlasClient) UnsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
-	rating documents.Rating,
 	fuzzy documents.FuzzyKind,
 ) (*mongo.Cursor, error) {
 	text := bson.M{
@@ -200,12 +199,6 @@ func (a *AtlasClient) UnsafeTextSearch(
 		})
 	}
 
-	p = append(p, bson.D{
-		{Key: "$match", Value: bson.M{
-			"rating": rating,
-		}},
-	})
-
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: fieldFlags()}},
@@ -227,9 +220,6 @@ func (a *AtlasClient) textSearch(
 	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
-	if err := q.Rating.Ok(); err != nil {
-		return nil, err
-	}
 	if err := q.FuzzyKind.Ok(); err != nil {
 		return nil, err
 	}
@@ -242,15 +232,10 @@ func (a *AtlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
-	if q.Rating == documents.RATING_UNSPECIFIED {
-		q.Rating = documents.RATING_G
-	}
-
 	return a.UnsafeTextSearch(
 		ctx,
 		k,
 		q.ItemType,
-		q.Rating,
 		q.FuzzyKind,
 	)
 }
@@ -258,7 +243,6 @@ func (a *AtlasClient) textSearch(
 func (a *AtlasClient) UnsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
-	rating documents.Rating,
 	vFieldName documents.VFieldName,
 	srcVec bson.Binary,
 ) (*mongo.Cursor, error) {
@@ -267,12 +251,10 @@ func (a *AtlasClient) UnsafeVectorSearch(
 	case documents.ITEM_TYPE_ANIME:
 		filter = bson.M{
 			"item_type": documents.ITEM_TYPE_ANIME,
-			"rating":    rating,
 		}
 	case documents.ITEM_TYPE_CHARACTER:
 		filter = bson.M{
 			"item_type": documents.ITEM_TYPE_CHARACTER,
-			"rating":    rating,
 		}
 	default:
 		return nil, fmt.Errorf("unexpected item type: %d", itemType)
@@ -344,9 +326,6 @@ func (a *AtlasClient) vectorSearch(
 	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
-	if err := q.Rating.Ok(); err != nil {
-		return nil, err
-	}
 
 	id, err := bson.ObjectIDFromHex(q.Id)
 	if err != nil {
@@ -355,9 +334,6 @@ func (a *AtlasClient) vectorSearch(
 
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
-	}
-	if q.Rating == documents.RATING_UNSPECIFIED {
-		q.Rating = documents.RATING_G
 	}
 	if q.VectorField == documents.VFIELD_UNSPECIFIED {
 		q.VectorField = documents.VFIELD_IMG
@@ -373,7 +349,7 @@ func (a *AtlasClient) vectorSearch(
 		return nil, err
 	}
 
-	return a.UnsafeVectorSearch(ctx, q.ItemType, q.Rating, vFieldName, v)
+	return a.UnsafeVectorSearch(ctx, q.ItemType, vFieldName, v)
 }
 
 func (a *AtlasClient) Close(ctx context.Context) error {
