@@ -25,7 +25,7 @@ func main() {
 		e.Logger.Fatal("env for img root is not set")
 	}
 
-	e.Static("/image", imgRoot)
+	e.Static("/", imgRoot)
 
 	if err := e.Start("localhost:8081"); err != nil {
 		e.Logger.Error(err)
