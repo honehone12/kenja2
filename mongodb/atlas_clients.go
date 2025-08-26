@@ -36,7 +36,10 @@ type AtlasClient struct {
 	replacer *strings.Replacer
 }
 
-func newAtlasClient(m *mongo.Client, l engine.Logger) (*AtlasClient, error) {
+func newAtlasClient(
+	m *mongo.Client,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
@@ -58,7 +61,11 @@ func newAtlasClient(m *mongo.Client, l engine.Logger) (*AtlasClient, error) {
 	}, nil
 }
 
-func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
+func connect(
+	uri string,
+	maxConn uint64,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	ops := options.Client().
 		ApplyURI(uri).
 		SetMaxPoolSize(maxConn).
@@ -72,7 +79,11 @@ func DirectConnect(uri string, maxConn uint64, l engine.Logger) (*AtlasClient, e
 	return newAtlasClient(m, l)
 }
 
-func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, error) {
+func connectAws(
+	format string,
+	maxConn uint64,
+	l engine.Logger,
+) (*AtlasClient, error) {
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
@@ -92,19 +103,13 @@ func connectAws(format string, maxConn uint64, l engine.Logger) (*AtlasClient, e
 		url.QueryEscape(secretKey),
 		url.QueryEscape(tkn),
 	)
-	return DirectConnect(uri, maxConn, l)
+	return connect(uri, maxConn, l)
 }
 
-func fieldFlags() bson.M {
+func fieldProjectionFlags() bson.M {
 	return bson.M{
-		"item_type":     1,
-		"rating":        1,
-		"url":           1,
-		"img":           1,
-		"parent":        1,
-		"name":          1,
-		"name_japanese": 1,
-		"name_english":  1,
+		"updated_at":   0,
+		"image_vector": 0,
 	}
 }
 
@@ -134,7 +139,7 @@ func (a *AtlasClient) document(
 	a.logger.Infof("[documet] q=%#v", q)
 
 	f := bson.M{"_id": id}
-	op := options.FindOne().SetProjection(fieldFlags())
+	op := options.FindOne().SetProjection(fieldProjectionFlags())
 
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
@@ -144,11 +149,10 @@ func (a *AtlasClient) document(
 	return res, nil
 }
 
-func (a *AtlasClient) UnsafeTextSearch(
+func (a *AtlasClient) unsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
-	rating documents.Rating,
 	fuzzy documents.FuzzyKind,
 ) (*mongo.Cursor, error) {
 	text := bson.M{
@@ -200,15 +204,9 @@ func (a *AtlasClient) UnsafeTextSearch(
 		})
 	}
 
-	p = append(p, bson.D{
-		{Key: "$match", Value: bson.M{
-			"rating": rating,
-		}},
-	})
-
 	p = append(p,
 		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
-		bson.D{{Key: "$project", Value: fieldFlags()}},
+		bson.D{{Key: "$project", Value: fieldProjectionFlags()}},
 	)
 
 	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
@@ -227,9 +225,6 @@ func (a *AtlasClient) textSearch(
 	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
-	if err := q.Rating.Ok(); err != nil {
-		return nil, err
-	}
 	if err := q.FuzzyKind.Ok(); err != nil {
 		return nil, err
 	}
@@ -242,24 +237,17 @@ func (a *AtlasClient) textSearch(
 		return nil, errors.New("invalid keywords")
 	}
 
-	if q.Rating == documents.RATING_UNSPECIFIED {
-		q.Rating = documents.RATING_G
-	}
-
-	return a.UnsafeTextSearch(
+	return a.unsafeTextSearch(
 		ctx,
 		k,
 		q.ItemType,
-		q.Rating,
 		q.FuzzyKind,
 	)
 }
 
-func (a *AtlasClient) UnsafeVectorSearch(
+func (a *AtlasClient) unsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
-	rating documents.Rating,
-	vFieldName documents.VFieldName,
 	srcVec bson.Binary,
 ) (*mongo.Cursor, error) {
 	var filter bson.M
@@ -267,12 +255,10 @@ func (a *AtlasClient) UnsafeVectorSearch(
 	case documents.ITEM_TYPE_ANIME:
 		filter = bson.M{
 			"item_type": documents.ITEM_TYPE_ANIME,
-			"rating":    rating,
 		}
 	case documents.ITEM_TYPE_CHARACTER:
 		filter = bson.M{
 			"item_type": documents.ITEM_TYPE_CHARACTER,
-			"rating":    rating,
 		}
 	default:
 		return nil, fmt.Errorf("unexpected item type: %d", itemType)
@@ -286,12 +272,12 @@ func (a *AtlasClient) UnsafeVectorSearch(
 				"index":         "vector",
 				"limit":         ATLAS_SEARCH_LIMIT,
 				"numCandidates": ATLAS_SEARCH_SIZE * ATLAS_SEARCH_LIMIT,
-				"path":          vFieldName,
+				"path":          "image_vector",
 				"queryVector":   srcVec,
 			}},
 		},
 		{
-			{Key: "$project", Value: fieldFlags()},
+			{Key: "$project", Value: fieldProjectionFlags()},
 		},
 	}
 
@@ -302,34 +288,26 @@ func (a *AtlasClient) UnsafeVectorSearch(
 func (a *AtlasClient) queryVector(
 	ctx context.Context,
 	id bson.ObjectID,
-	vFieldName documents.VFieldName,
 ) (bson.Binary, error) {
 	var b bson.Binary
 
-	// add vector field names when use
-	if vFieldName != "image_vector" {
-		return b, fmt.Errorf("unexpected vector field: %s", vFieldName)
-	}
-
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
-		string(vFieldName): 1,
+		"image_vector": 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
 		return b, res.Err()
 	}
 
-	if vFieldName == "image_vector" {
-		v := documents.ImageVector{}
-		err := res.Decode(&v)
-		if err != nil {
-			return b, err
-		}
-		b, err = v.Binary()
-		if err != nil {
-			return b, err
-		}
+	v := documents.ImageVector{}
+	err := res.Decode(&v)
+	if err != nil {
+		return b, err
+	}
+	b = v.ImageVector.Binary()
+	if b.IsZero() {
+		return b, errors.New("image vector is empty")
 	}
 
 	return b, nil
@@ -344,9 +322,6 @@ func (a *AtlasClient) vectorSearch(
 	if err := q.ItemType.Ok(); err != nil {
 		return nil, err
 	}
-	if err := q.Rating.Ok(); err != nil {
-		return nil, err
-	}
 
 	id, err := bson.ObjectIDFromHex(q.Id)
 	if err != nil {
@@ -356,24 +331,13 @@ func (a *AtlasClient) vectorSearch(
 	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
-	if q.Rating == documents.RATING_UNSPECIFIED {
-		q.Rating = documents.RATING_G
-	}
-	if q.VectorField == documents.VFIELD_UNSPECIFIED {
-		q.VectorField = documents.VFIELD_IMG
-	}
 
-	vFieldName, err := q.VectorField.Name()
+	v, err := a.queryVector(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := a.queryVector(ctx, id, vFieldName)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.UnsafeVectorSearch(ctx, q.ItemType, q.Rating, vFieldName, v)
+	return a.unsafeVectorSearch(ctx, q.ItemType, v)
 }
 
 func (a *AtlasClient) Close(ctx context.Context) error {

@@ -40,7 +40,7 @@ func main() {
 		},
 	)
 
-	imgGroup := e.Group("/preview/*")
+	imgGroup := e.Group("/image/*")
 	imgGroup.Use(middleware.Proxy(imgBalancer))
 	webUiGroup := e.Group("/*")
 	webUiGroup.Use(middleware.Proxy(webUiBalancer))
