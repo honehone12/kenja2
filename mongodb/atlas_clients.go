@@ -305,9 +305,9 @@ func (a *AtlasClient) queryVector(
 	if err != nil {
 		return b, err
 	}
-	b, err = v.Binary()
-	if err != nil {
-		return b, err
+	b = v.ImageVector.Binary()
+	if b.IsZero() {
+		return b, errors.New("image vector is empty")
 	}
 
 	return b, nil

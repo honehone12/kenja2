@@ -1,8 +1,6 @@
 package documents
 
 import (
-	"errors"
-
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -34,12 +32,4 @@ type SearchResult struct {
 
 type ImageVector struct {
 	ImageVector bson.Vector `bson:"image_vector"`
-}
-
-func (v *ImageVector) Binary() (bson.Binary, error) {
-	b := v.ImageVector.Binary()
-	if b.IsZero() {
-		return b, errors.New("iamge vector fiel is empty")
-	}
-	return b, nil
 }
