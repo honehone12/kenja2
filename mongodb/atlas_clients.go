@@ -184,23 +184,16 @@ func (a *AtlasClient) unsafeTextSearch(
 		},
 	}
 
-	switch itemType {
-	case documents.ITEM_TYPE_ANIME:
-		p = append(p, bson.D{
-			{Key: "$match", Value: bson.M{
-				"item_type": documents.ITEM_TYPE_ANIME,
-			}},
-		})
-	case documents.ITEM_TYPE_CHARACTER:
-		p = append(p, bson.D{
-			{Key: "$match", Value: bson.M{
-				"item_type": documents.ITEM_TYPE_CHARACTER,
-			}},
-		})
-	default:
+	if itemType == documents.ITEM_TYPE_UNSPECIFIED {
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
 				"item_type": allITypeFilter(),
+			}},
+		})
+	} else {
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"item_type": itemType,
 			}},
 		})
 	}
