@@ -113,11 +113,12 @@ func fieldProjectionFlags() bson.M {
 	}
 }
 
-func animeAndCharacterITypeFilter() bson.M {
+func allITypeFilter() bson.M {
 	return bson.M{
 		"$in": []documents.ItemType{
 			documents.ITEM_TYPE_ANIME,
 			documents.ITEM_TYPE_CHARACTER,
+			documents.ITEM_TYPE_YVIDEO,
 		},
 	}
 }
@@ -199,7 +200,7 @@ func (a *AtlasClient) unsafeTextSearch(
 	default:
 		p = append(p, bson.D{
 			{Key: "$match", Value: bson.M{
-				"item_type": animeAndCharacterITypeFilter(),
+				"item_type": allITypeFilter(),
 			}},
 		})
 	}
