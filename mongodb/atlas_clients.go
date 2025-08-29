@@ -10,17 +10,16 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const ATLAS_SEARCH_SIZE = 50
-const ATLAS_SEARCH_LIMIT = 100
 const ATLAS_KW_LIMIT = 120
-const ATLAS_CURSOR_MAX_AWAIT = time.Second
+const ATLAS_TEXT_SEARCH_LIMIT = 250
+const ATLAS_VECTOR_SEARCH_LIMIT = 125
+const ATLAS_SEARCH_SIZE = 50
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
 const FUZZY_MAX_TRY_PER_KW = 50
 const MAX_SINGLE_TKN_FUZZY = 3
@@ -199,11 +198,11 @@ func (a *AtlasClient) unsafeTextSearch(
 	}
 
 	p = append(p,
-		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
+		bson.D{{Key: "$limit", Value: ATLAS_TEXT_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: fieldProjectionFlags()}},
 	)
 
-	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
+	op := options.Aggregate()
 	return a.collection.Aggregate(ctx, p, op)
 }
 
@@ -264,8 +263,8 @@ func (a *AtlasClient) unsafeVectorSearch(
 				"exact":         false,
 				"filter":        filter,
 				"index":         "vector",
-				"limit":         ATLAS_SEARCH_LIMIT,
-				"numCandidates": ATLAS_SEARCH_SIZE * ATLAS_SEARCH_LIMIT,
+				"limit":         ATLAS_VECTOR_SEARCH_LIMIT,
+				"numCandidates": ATLAS_VECTOR_SEARCH_LIMIT * ATLAS_SEARCH_SIZE, // max 10000
 				"path":          "image_vector",
 				"queryVector":   srcVec,
 			}},
@@ -275,7 +274,7 @@ func (a *AtlasClient) unsafeVectorSearch(
 		},
 	}
 
-	op := options.Aggregate().SetMaxAwaitTime(ATLAS_CURSOR_MAX_AWAIT)
+	op := options.Aggregate()
 	return a.collection.Aggregate(ctx, p, op)
 }
 
