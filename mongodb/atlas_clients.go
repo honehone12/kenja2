@@ -22,6 +22,7 @@ const ATLAS_VECTOR_SEARCH_LIMIT = 125
 const ATLAS_SEARCH_SIZE = 50
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
 const FUZZY_MAX_TRY_PER_KW = 50
+const FUZZY_NO_CHNGE_PREFIX = 1
 const MAX_SINGLE_TKN_FUZZY = 3
 
 var ErrFuzzySingleTknLimit = errors.New("keywords contain too many single tokens")
@@ -170,6 +171,7 @@ func (a *AtlasClient) unsafeTextSearch(
 		text["fuzzy"] = bson.M{
 			"maxEdits":      FUZZY_MAX_EDIT_TO_MATCH,
 			"maxExpansions": FUZZY_MAX_TRY_PER_KW,
+			"prefixLength":  FUZZY_NO_CHNGE_PREFIX,
 		}
 	}
 
