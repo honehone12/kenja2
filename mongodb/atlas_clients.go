@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const ATLAS_KW_LIMIT = 120
+const ATLAS_KW_LIMIT = 240 //js accecpts 120 -> 120 * 2bytes
 const ATLAS_TEXT_SEARCH_LIMIT = 150
 const ATLAS_VECTOR_SEARCH_LIMIT = 150
 const ATLAS_SEARCH_SIZE = 50
