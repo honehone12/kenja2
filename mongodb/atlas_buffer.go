@@ -41,11 +41,8 @@ func (a *AtlasBuffer) Ping(ctx context.Context) error {
 	return a.ping(ctx)
 }
 
-func (a *AtlasBuffer) Document(
-	ctx context.Context,
-	q *documents.SearchQuery,
-) ([]documents.FlatDocument, error) {
-	res, err := a.document(ctx, q)
+func (a *AtlasBuffer) NewItems(ctx context.Context) ([]documents.FlatDocument, error) {
+	res, err := a.newItems(ctx)
 	if err != nil {
 		return nil, err
 	}
