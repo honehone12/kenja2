@@ -15,10 +15,6 @@ type BufferingEngine interface {
 		ctx context.Context,
 		q *documents.SearchQuery,
 	) ([]documents.FlatDocument, error)
-	Document(
-		ctx context.Context,
-		q *documents.SearchQuery,
-	) ([]documents.FlatDocument, error)
-
+	NewItems(ctx context.Context) ([]documents.FlatDocument, error)
 	Close(ctx context.Context) error
 }

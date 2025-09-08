@@ -128,26 +128,13 @@ func (a *AtlasClient) ping(ctx context.Context) error {
 	return a.client.Ping(ctx, nil)
 }
 
-func (a *AtlasClient) document(
-	ctx context.Context,
-	q *documents.SearchQuery,
-) (*mongo.SingleResult, error) {
-	id, err := bson.ObjectIDFromHex(q.Id)
-	if err != nil {
-		return nil, err
-	}
+func (a *AtlasClient) newItems(ctx context.Context) (*mongo.SingleResult, error) {
+	a.logger.Infof("[new items]")
 
-	a.logger.Infof("[documet] q=%#v", q)
+	// impl
+	// find new items by updated_at
 
-	f := bson.M{"_id": id}
-	op := options.FindOne().SetProjection(fieldProjectionFlags())
-
-	res := a.collection.FindOne(ctx, f, op)
-	if res.Err() != nil {
-		return nil, res.Err()
-	}
-
-	return res, nil
+	return nil, errors.New("not implemented yet")
 }
 
 func (a *AtlasClient) unsafeTextSearch(
