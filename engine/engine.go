@@ -7,6 +7,7 @@ import (
 
 type BufferingEngine interface {
 	Ping(ctx context.Context) error
+	Close(ctx context.Context) error
 	TextSearch(
 		ctx context.Context,
 		q *documents.SearchQuery,
@@ -15,6 +16,4 @@ type BufferingEngine interface {
 		ctx context.Context,
 		q *documents.SearchQuery,
 	) ([]documents.FlatDocument, error)
-	NewItems(ctx context.Context) ([]documents.FlatDocument, error)
-	Close(ctx context.Context) error
 }

@@ -41,20 +41,6 @@ func (a *AtlasBuffer) Ping(ctx context.Context) error {
 	return a.ping(ctx)
 }
 
-func (a *AtlasBuffer) NewItems(ctx context.Context) ([]documents.FlatDocument, error) {
-	res, err := a.newItems(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	d := documents.FlatDocument{}
-	if err := res.Decode(&d); err != nil {
-		return nil, err
-	}
-
-	return []documents.FlatDocument{d}, nil
-}
-
 func (a *AtlasBuffer) TextSearch(
 	ctx context.Context,
 	q *documents.SearchQuery,
