@@ -128,15 +128,6 @@ func (a *AtlasClient) ping(ctx context.Context) error {
 	return a.client.Ping(ctx, nil)
 }
 
-func (a *AtlasClient) newItems(ctx context.Context) (*mongo.SingleResult, error) {
-	a.logger.Infof("[new items]")
-
-	// impl
-	// find new items by updated_at
-
-	return nil, errors.New("not implemented yet")
-}
-
 func (a *AtlasClient) unsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,

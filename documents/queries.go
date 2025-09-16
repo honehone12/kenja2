@@ -25,8 +25,8 @@ type FunctionId uint32
 
 const (
 	FID_UNSPECIFIED FunctionId = iota
-	FID_PING
-	FID_NEW_ITEMS
+	FID_PING                   // not in use
+	FID_CLOSE                  // not in use
 	FID_TEXTSEARCH_BUFFER
 	FID_VECTORSEARCH_BUFFER
 )

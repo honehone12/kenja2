@@ -36,7 +36,7 @@ func BufferedQuery(
 	switch q.FunctionId {
 	case documents.FID_PING:
 		fallthrough
-	case documents.FID_NEW_ITEMS:
+	case documents.FID_CLOSE:
 		return nil, fmt.Errorf("function: %d is not in service", q.FunctionId)
 	case documents.FID_TEXTSEARCH_BUFFER:
 		return engine.TextSearch(ctx, q)
