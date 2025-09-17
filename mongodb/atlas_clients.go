@@ -132,7 +132,7 @@ func (a *AtlasClient) random(
 ) (*mongo.Cursor, error) {
 	it := q.RandomQuery()
 
-	a.logger.Infof("[random] itemType=%d", it)
+	a.logger.Infof("[random] item_type=%d", it)
 
 	if err := it.Ok(); err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (a *AtlasClient) textSearch(
 ) (*mongo.Cursor, error) {
 	kw, it, fz := q.TextSearchQuery()
 
-	a.logger.Infof("[text] keywords=%s itemType=%d fuzzyKind=%d", kw, it, fz)
+	a.logger.Infof("[text] keywords=%s item_type=%d fuzzy_kind=%d", kw, it, fz)
 
 	if len(kw) > ATLAS_KW_LIMIT {
 		return nil, errors.New("unexpected keywords length")
@@ -315,7 +315,7 @@ func (a *AtlasClient) vectorSearch(
 ) (*mongo.Cursor, error) {
 	id, it := q.VectorSearchQuery()
 
-	a.logger.Infof("[vector] id=%s itemType=%d", id, it)
+	a.logger.Infof("[vector] id=%s item_type=%d", id, it)
 
 	if err := it.Ok(); err != nil {
 		return nil, err
