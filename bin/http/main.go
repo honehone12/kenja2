@@ -50,7 +50,13 @@ func handler(e echo.Context) error {
 
 	q := documents.SearchQuery{}
 	if err := e.Bind(&q); err != nil {
-		e.Logger().Error(err)
+		e.Logger().Warn(err)
+		return responseBadRequest(e)
+	}
+
+	size, ok := q.StringSize()
+	if !ok || size > REQUEST_BODY_LIMIT {
+		e.Logger().Warn("invalid request size")
 		return responseBadRequest(e)
 	}
 
