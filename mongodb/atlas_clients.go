@@ -17,8 +17,7 @@ import (
 )
 
 const ATLAS_KW_LIMIT = 240 //js accecpts 120 -> 120 * 2bytes
-const ATLAS_TEXT_SEARCH_LIMIT = 150
-const ATLAS_VECTOR_SEARCH_LIMIT = 150
+const ATLAS_SEARCH_LIMIT = 150
 const ATLAS_SEARCH_SIZE = 50
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
 const FUZZY_MAX_TRY_PER_KW = 50
@@ -37,8 +36,7 @@ type AtlasClient struct {
 }
 
 func newAtlasClient(
-	m *mongo.Client,
-	l engine.Logger,
+	m *mongo.Client, l engine.Logger,
 ) (*AtlasClient, error) {
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
@@ -124,8 +122,34 @@ func allITypeFilter() bson.M {
 }
 
 func (a *AtlasClient) ping(ctx context.Context) error {
-	a.logger.Info("ping")
+	a.logger.Info("[ping]")
+
 	return a.client.Ping(ctx, nil)
+}
+
+func (a *AtlasClient) random(
+	ctx context.Context, q documents.Query,
+) (*mongo.Cursor, error) {
+	it := q.RandomQuery()
+
+	a.logger.Infof("[random] itemType=%d", it)
+
+	if err := it.Ok(); err != nil {
+		return nil, err
+	}
+
+	// add item type query here
+
+	p := mongo.Pipeline{
+		{
+			{Key: "$sample", Value: bson.M{
+				"size": ATLAS_SEARCH_LIMIT,
+			}},
+		},
+	}
+
+	op := options.Aggregate()
+	return a.collection.Aggregate(ctx, p, op)
 }
 
 func (a *AtlasClient) unsafeTextSearch(
@@ -178,7 +202,7 @@ func (a *AtlasClient) unsafeTextSearch(
 	}
 
 	p = append(p,
-		bson.D{{Key: "$limit", Value: ATLAS_TEXT_SEARCH_LIMIT}},
+		bson.D{{Key: "$limit", Value: ATLAS_SEARCH_LIMIT}},
 		bson.D{{Key: "$project", Value: fieldProjectionFlags()}},
 	)
 
@@ -187,23 +211,24 @@ func (a *AtlasClient) unsafeTextSearch(
 }
 
 func (a *AtlasClient) textSearch(
-	ctx context.Context,
-	q *documents.SearchQuery,
+	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
-	a.logger.Infof("[text] q=%#v", q)
+	kw, it, fz := q.TextSearchQuery()
 
-	if len(q.Keywords) > ATLAS_KW_LIMIT {
+	a.logger.Infof("[text] keywords=%s itemType=%d fuzzyKind=%d", kw, it, fz)
+
+	if len(kw) > ATLAS_KW_LIMIT {
 		return nil, errors.New("unexpected keywords length")
 	}
-	if err := q.ItemType.Ok(); err != nil {
+	if err := it.Ok(); err != nil {
 		return nil, err
 	}
-	if err := q.FuzzyKind.Ok(); err != nil {
+	if err := fz.Ok(); err != nil {
 		return nil, err
 	}
 
-	k, singleTkns := keywords.CleanKeywords(a.replacer, q.Keywords)
-	if q.FuzzyKind == documents.FUZZY_USE && singleTkns > MAX_SINGLE_TKN_FUZZY {
+	k, singleTkns := keywords.CleanKeywords(a.replacer, kw)
+	if fz == documents.FUZZY_USE && singleTkns > MAX_SINGLE_TKN_FUZZY {
 		return nil, ErrFuzzySingleTknLimit
 	}
 	if len(k) == 0 {
@@ -213,8 +238,8 @@ func (a *AtlasClient) textSearch(
 	return a.unsafeTextSearch(
 		ctx,
 		k,
-		q.ItemType,
-		q.FuzzyKind,
+		it,
+		fz,
 	)
 }
 
@@ -243,8 +268,8 @@ func (a *AtlasClient) unsafeVectorSearch(
 				"exact":         false,
 				"filter":        filter,
 				"index":         "vector",
-				"limit":         ATLAS_VECTOR_SEARCH_LIMIT,
-				"numCandidates": ATLAS_VECTOR_SEARCH_LIMIT * ATLAS_SEARCH_SIZE, // max 10000
+				"limit":         ATLAS_SEARCH_LIMIT,
+				"numCandidates": ATLAS_SEARCH_LIMIT * ATLAS_SEARCH_SIZE, // max 10000
 				"path":          "image_vector",
 				"queryVector":   srcVec,
 			}},
@@ -259,8 +284,7 @@ func (a *AtlasClient) unsafeVectorSearch(
 }
 
 func (a *AtlasClient) queryVector(
-	ctx context.Context,
-	id bson.ObjectID,
+	ctx context.Context, id bson.ObjectID,
 ) (bson.Binary, error) {
 	var b bson.Binary
 
@@ -287,30 +311,31 @@ func (a *AtlasClient) queryVector(
 }
 
 func (a *AtlasClient) vectorSearch(
-	ctx context.Context,
-	q *documents.SearchQuery,
+	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
-	a.logger.Infof("[vector] q=%#v", q)
+	id, it := q.VectorSearchQuery()
 
-	if err := q.ItemType.Ok(); err != nil {
+	a.logger.Infof("[vector] id=%s itemType=%d", id, it)
+
+	if err := it.Ok(); err != nil {
 		return nil, err
 	}
 
-	id, err := bson.ObjectIDFromHex(q.Id)
+	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if q.ItemType == documents.ITEM_TYPE_UNSPECIFIED {
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
 		return nil, errors.New("vector search requires item type")
 	}
 
-	v, err := a.queryVector(ctx, id)
+	v, err := a.queryVector(ctx, oid)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.unsafeVectorSearch(ctx, q.ItemType, v)
+	return a.unsafeVectorSearch(ctx, it, v)
 }
 
 func (a *AtlasClient) Close(ctx context.Context) error {
