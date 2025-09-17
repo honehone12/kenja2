@@ -7,13 +7,16 @@ import (
 
 type BufferingEngine interface {
 	Ping(ctx context.Context) error
-	Close(ctx context.Context) error
+	Random(
+		ctx context.Context,
+		q documents.Query,
+	) ([]documents.FlatDocument, error)
 	TextSearch(
 		ctx context.Context,
-		q *documents.SearchQuery,
+		q documents.Query,
 	) ([]documents.FlatDocument, error)
 	VectorSeach(
 		ctx context.Context,
-		q *documents.SearchQuery,
+		q documents.Query,
 	) ([]documents.FlatDocument, error)
 }
