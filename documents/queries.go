@@ -25,8 +25,8 @@ type FunctionId uint32
 
 const (
 	FID_UNSPECIFIED FunctionId = iota
-	FID_PING                   // not in use
-	FID_CLOSE                  // not in use
+	FID_PING
+	FID_RANDOM
 	FID_TEXTSEARCH_BUFFER
 	FID_VECTORSEARCH_BUFFER
 )
@@ -45,6 +45,12 @@ func (f FuzzyKind) Ok() error {
 	return nil
 }
 
+type Query interface {
+	RandomQuery() ItemType
+	TextSearchQuery() (string, ItemType, FuzzyKind)
+	VectorSearchQuery() (string, ItemType)
+}
+
 type SearchQuery struct {
 	FunctionId FunctionId `json:"function_id"`
 	ItemType   ItemType   `json:"item_type"`
@@ -60,4 +66,16 @@ func (q *SearchQuery) StringSize() (uint64, bool) {
 	}
 
 	return len, true
+}
+
+func (q *SearchQuery) RandomQuery() ItemType {
+	return q.ItemType
+}
+
+func (q *SearchQuery) TextSearchQuery() (string, ItemType, FuzzyKind) {
+	return q.Keywords, q.ItemType, q.FuzzyKind
+}
+
+func (q *SearchQuery) VectorSearchQuery() (string, ItemType) {
+	return q.Id, q.ItemType
 }

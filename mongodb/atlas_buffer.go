@@ -41,9 +41,24 @@ func (a *AtlasBuffer) Ping(ctx context.Context) error {
 	return a.ping(ctx)
 }
 
+func (a *AtlasBuffer) Random(
+	ctx context.Context, q documents.Query,
+) ([]documents.FlatDocument, error) {
+	stream, err := a.random(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	var docs []documents.FlatDocument
+	if err := stream.All(ctx, &docs); err != nil {
+		return nil, err
+	}
+
+	return docs, nil
+}
+
 func (a *AtlasBuffer) TextSearch(
-	ctx context.Context,
-	q *documents.SearchQuery,
+	ctx context.Context, q documents.Query,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.textSearch(ctx, q)
 	if errors.Is(err, ErrFuzzySingleTknLimit) {
@@ -62,8 +77,7 @@ func (a *AtlasBuffer) TextSearch(
 }
 
 func (a *AtlasBuffer) VectorSeach(
-	ctx context.Context,
-	q *documents.SearchQuery,
+	ctx context.Context, q documents.Query,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.vectorSearch(ctx, q)
 	if err != nil {

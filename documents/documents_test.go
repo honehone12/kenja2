@@ -14,3 +14,5 @@ func TestParentIsZero(t *testing.T) {
 		panic("parent should be zero")
 	}
 }
+
+var _ Query = &SearchQuery{}
