@@ -54,12 +54,6 @@ func handler(e echo.Context) error {
 		return responseBadRequest(e)
 	}
 
-	size, ok := q.StringSize()
-	if !ok || size > REQUEST_BODY_LIMIT {
-		e.Logger().Warn("invalid request size")
-		return responseBadRequest(e)
-	}
-
 	ctx, cancel := context.WithTimeout(req.Context(), REQUEST_TIME_LIMIT)
 	defer cancel()
 
