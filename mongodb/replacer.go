@@ -1,25 +1,27 @@
 package mongodb
 
 import (
-	"kenja2/keywords"
 	"strings"
 )
 
+const PLACE_HOLDER_SPACE = " "
+const PLACE_HOLDER_NONE = ""
+
 var __mongoReplacer = strings.NewReplacer(
-	"/", keywords.PLACE_HOLDER_SPACE,
-	"$", keywords.PLACE_HOLDER_NONE,
-	".", keywords.PLACE_HOLDER_NONE,
-	",", keywords.PLACE_HOLDER_NONE,
-	"{", keywords.PLACE_HOLDER_NONE,
-	"}", keywords.PLACE_HOLDER_NONE,
-	"[", keywords.PLACE_HOLDER_NONE,
-	"]", keywords.PLACE_HOLDER_NONE,
-	"(", keywords.PLACE_HOLDER_NONE,
-	")", keywords.PLACE_HOLDER_NONE,
-	":", keywords.PLACE_HOLDER_NONE,
-	";", keywords.PLACE_HOLDER_NONE,
-	"`", keywords.PLACE_HOLDER_NONE,
-	"'", keywords.PLACE_HOLDER_NONE,
-	`"`, keywords.PLACE_HOLDER_NONE,
-	`\`, keywords.PLACE_HOLDER_NONE,
+	"/", PLACE_HOLDER_SPACE,
+	"$", PLACE_HOLDER_NONE,
+	".", PLACE_HOLDER_SPACE,
+	",", PLACE_HOLDER_SPACE,
+	"{", PLACE_HOLDER_SPACE,
+	"}", PLACE_HOLDER_SPACE,
+	"[", PLACE_HOLDER_SPACE,
+	"]", PLACE_HOLDER_SPACE,
+	"(", PLACE_HOLDER_SPACE,
+	")", PLACE_HOLDER_SPACE,
+	":", PLACE_HOLDER_SPACE,
+	";", PLACE_HOLDER_SPACE,
+	"`", PLACE_HOLDER_NONE,
+	"'", PLACE_HOLDER_NONE,
+	`"`, PLACE_HOLDER_SPACE,
+	`\`, PLACE_HOLDER_NONE,
 )
