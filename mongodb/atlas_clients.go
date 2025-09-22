@@ -138,15 +138,20 @@ func (a *AtlasClient) random(
 		return nil, err
 	}
 
-	// add item type query here
-
-	p := mongo.Pipeline{
-		{
-			{Key: "$sample", Value: bson.M{
-				"size": ATLAS_SEARCH_LIMIT,
+	p := mongo.Pipeline{}
+	if it != documents.ITEM_TYPE_UNSPECIFIED {
+		p = append(p, bson.D{
+			{Key: "$match", Value: bson.M{
+				"item_type": it,
 			}},
-		},
+		})
 	}
+
+	p = append(p, bson.D{
+		{Key: "$sample", Value: bson.M{
+			"size": ATLAS_SEARCH_LIMIT,
+		}},
+	})
 
 	op := options.Aggregate()
 	return a.collection.Aggregate(ctx, p, op)
@@ -234,6 +239,8 @@ func (a *AtlasClient) textSearch(
 	if len(k) == 0 {
 		return nil, errors.New("invalid keywords")
 	}
+
+	a.logger.Infof("[text] (actual) keywords=%s", k)
 
 	return a.unsafeTextSearch(
 		ctx,
