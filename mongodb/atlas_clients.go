@@ -22,9 +22,8 @@ const ATLAS_SEARCH_SIZE = 50
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
 const FUZZY_MAX_TRY_PER_KW = 50
 const FUZZY_NO_CHNGE_PREFIX = 1
-const MAX_SINGLE_TKN_FUZZY = 3
-
-var ErrFuzzySingleTknLimit = errors.New("keywords contain too many single tokens")
+const FUZZY_MAX_SINGLE_TKN = 3
+const FUZZY_MAX_KW_LIMIT = 65
 
 type AtlasClient struct {
 	client     *mongo.Client
@@ -232,19 +231,26 @@ func (a *AtlasClient) textSearch(
 		return nil, err
 	}
 
-	k, singleTkns := keywords.CleanKeywords(a.replacer, kw)
-	if fz == documents.FUZZY_USE && singleTkns > MAX_SINGLE_TKN_FUZZY {
-		return nil, ErrFuzzySingleTknLimit
-	}
-	if len(k) == 0 {
+	cleanKw, singleTkns := keywords.CleanKeywords(a.replacer, kw)
+	lenKw := len(cleanKw)
+	if lenKw == 0 {
 		return nil, errors.New("invalid keywords")
 	}
+	if fz == documents.FUZZY_USE {
+		// turn fuzzy off to prevent error
+		if singleTkns > FUZZY_MAX_SINGLE_TKN {
+			fz = documents.FUZZY_UNSPECIFIED
+		}
+		if lenKw > FUZZY_MAX_KW_LIMIT {
+			fz = documents.FUZZY_UNSPECIFIED
+		}
+	}
 
-	a.logger.Infof("[text] (actual) keywords=%s", k)
+	a.logger.Infof("[text] (actual) keywords=%s", cleanKw)
 
 	return a.unsafeTextSearch(
 		ctx,
-		k,
+		cleanKw,
 		it,
 		fz,
 	)
