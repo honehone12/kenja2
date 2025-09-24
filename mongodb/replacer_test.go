@@ -6,13 +6,13 @@ import (
 )
 
 func TestMongoKeywords(t *testing.T) {
-	s := "$.,{}[]():;/`"
+	s := "$.,{}[]():;/"
 	clean, _ := keywords.CleanKeywords(__mongoReplacer, s)
 	if clean != "" {
 		panic("replacer fail")
 	}
 
-	s = "$.,{}[]():;/`$.,{}[]():;/`"
+	s = "$.,{}[]():;/$.,{}[]():;/"
 	clean, _ = keywords.CleanKeywords(__mongoReplacer, s)
 	if clean != "" {
 		panic("replacer fail")

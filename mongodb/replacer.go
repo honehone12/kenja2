@@ -20,6 +20,5 @@ var __mongoReplacer = strings.NewReplacer(
 	")", PLACE_HOLDER_SPACE,
 	":", PLACE_HOLDER_SPACE,
 	";", PLACE_HOLDER_SPACE,
-	"`", PLACE_HOLDER_NONE,
 	`\`, PLACE_HOLDER_NONE,
 )
