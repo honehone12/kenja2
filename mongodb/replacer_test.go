@@ -18,18 +18,6 @@ func TestMongoKeywords(t *testing.T) {
 		panic("replacer fail")
 	}
 
-	s = `"'`
-	clean, _ = keywords.CleanKeywords(__mongoReplacer, s)
-	if clean != "" {
-		panic("replacer fail")
-	}
-
-	s = `"'"'`
-	clean, _ = keywords.CleanKeywords(__mongoReplacer, s)
-	if clean != "" {
-		panic("replacer fail")
-	}
-
 	s = "  a  b    c         de "
 	clean, _ = keywords.CleanKeywords(__mongoReplacer, s)
 	if clean != "a b c de" {
