@@ -45,7 +45,8 @@ func main() {
 	webUiGroup := e.Group("/*")
 	webUiGroup.Use(middleware.Proxy(webUiBalancer))
 
-	if err := e.Start("localhost:8082"); err != nil {
+	if err := e.Start("0.0.0.0:8082"); err != nil {
+
 		e.Logger.Error(err)
 	}
 }
