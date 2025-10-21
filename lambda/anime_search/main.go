@@ -14,7 +14,7 @@ import (
 const REQUEST_BODY_LIMIT = 1024
 const ENGINE_MAX_CONN = 1
 
-var __engine engine.BufferingEngine
+var __engine engine.Engine
 
 func Handler(
 	ctx context.Context,
