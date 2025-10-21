@@ -19,7 +19,7 @@ const ENGINE_MAX_CONN = 3
 const REQUEST_BODY_LIMIT = 1024
 const REQUEST_TIME_LIMIT = time.Second * 10
 
-var __engine engine.BufferingEngine
+var __engine engine.Engine
 
 func responseBadRequest(e echo.Context) error {
 	return e.String(http.StatusBadRequest, "bad request")

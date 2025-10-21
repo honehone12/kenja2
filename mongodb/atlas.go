@@ -87,3 +87,25 @@ func (a *Atlas) VectorSeach(
 
 	return docs, nil
 }
+
+func (a *Atlas) TextSearchStream(
+	ctx context.Context, q documents.Query,
+) (engine.Stream[documents.FlatDocument], error) {
+	stream, err := a.textSearch(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Stream{stream}, nil
+}
+
+func (a *Atlas) VectorSearchStream(
+	ctx context.Context, q documents.Query,
+) (engine.Stream[documents.FlatDocument], error) {
+	stream, err := a.vectorSearch(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Stream{stream}, nil
+}

@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func ConnectAtlas(maxConn uint64, logger engine.Logger) (engine.BufferingEngine, error) {
+func ConnectAtlas(maxConn uint64, logger engine.Logger) (engine.Engine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
 		return nil, errors.New("env for search engine uri is not set")
@@ -19,7 +19,7 @@ func ConnectAtlas(maxConn uint64, logger engine.Logger) (engine.BufferingEngine,
 	return mongodb.Connect(uri, maxConn, logger)
 }
 
-func ConnectAtlasAws(maxConn uint64, logger engine.Logger) (engine.BufferingEngine, error) {
+func ConnectAtlasAws(maxConn uint64, logger engine.Logger) (engine.Engine, error) {
 	uri := os.Getenv("SEARCHENGINE_URI")
 	if len(uri) == 0 {
 		return nil, errors.New("env for search engine uri is not set")
@@ -29,7 +29,7 @@ func ConnectAtlasAws(maxConn uint64, logger engine.Logger) (engine.BufferingEngi
 }
 
 func BufferedQuery(
-	engine engine.BufferingEngine,
+	engine engine.Engine,
 	ctx context.Context,
 	q *documents.SearchQuery,
 ) ([]documents.FlatDocument, error) {
@@ -38,9 +38,9 @@ func BufferedQuery(
 		return nil, fmt.Errorf("function: %d is not in service", q.FunctionId)
 	case documents.FID_RANDOM:
 		return engine.Random(ctx, q)
-	case documents.FID_TEXTSEARCH_BUFFER:
+	case documents.FID_TEXTSEARCH:
 		return engine.TextSearch(ctx, q)
-	case documents.FID_VECTORSEARCH_BUFFER:
+	case documents.FID_VECTORSEARCH:
 		return engine.VectorSeach(ctx, q)
 	default:
 		return nil, errors.New("invalid function id")

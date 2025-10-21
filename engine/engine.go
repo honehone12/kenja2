@@ -5,7 +5,14 @@ import (
 	"kenja2/documents"
 )
 
-type BufferingEngine interface {
+type Stream[T any] interface {
+	Next(ctx context.Context) bool
+	Decode(val *T) error
+	Err() error
+	Close(ctx context.Context) error
+}
+
+type Engine interface {
 	Ping(ctx context.Context) error
 	Random(
 		ctx context.Context,
@@ -19,4 +26,12 @@ type BufferingEngine interface {
 		ctx context.Context,
 		q documents.Query,
 	) ([]documents.FlatDocument, error)
+	TextSearchStream(
+		ctx context.Context,
+		q documents.Query,
+	) (Stream[documents.FlatDocument], error)
+	VectorSearchStream(
+		ctx context.Context,
+		q documents.Query,
+	) (Stream[documents.FlatDocument], error)
 }
