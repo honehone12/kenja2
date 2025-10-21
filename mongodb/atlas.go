@@ -6,41 +6,41 @@ import (
 	"kenja2/engine"
 )
 
-type AtlasBuffer struct {
-	*AtlasClient
+type Atlas struct {
+	*atlasClient
 }
 
 func Connect(
 	uri string,
 	maxConn uint64,
 	logger engine.Logger,
-) (*AtlasBuffer, error) {
+) (*Atlas, error) {
 	atlasClient, err := connect(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer{atlasClient}, nil
+	return &Atlas{atlasClient}, nil
 }
 
 func ConnectAws(
 	uri string,
 	maxConn uint64,
 	logger engine.Logger,
-) (*AtlasBuffer, error) {
+) (*Atlas, error) {
 	atlasClient, err := connectAws(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AtlasBuffer{atlasClient}, nil
+	return &Atlas{atlasClient}, nil
 }
 
-func (a *AtlasBuffer) Ping(ctx context.Context) error {
+func (a *Atlas) Ping(ctx context.Context) error {
 	return a.ping(ctx)
 }
 
-func (a *AtlasBuffer) Random(
+func (a *Atlas) Random(
 	ctx context.Context, q documents.Query,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.random(ctx, q)
@@ -56,7 +56,7 @@ func (a *AtlasBuffer) Random(
 	return docs, nil
 }
 
-func (a *AtlasBuffer) TextSearch(
+func (a *Atlas) TextSearch(
 	ctx context.Context, q documents.Query,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.textSearch(ctx, q)
@@ -72,7 +72,7 @@ func (a *AtlasBuffer) TextSearch(
 	return docs, nil
 }
 
-func (a *AtlasBuffer) VectorSeach(
+func (a *Atlas) VectorSeach(
 	ctx context.Context, q documents.Query,
 ) ([]documents.FlatDocument, error) {
 	stream, err := a.vectorSearch(ctx, q)

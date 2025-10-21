@@ -4,4 +4,4 @@ import (
 	"kenja2/engine"
 )
 
-var _ engine.BufferingEngine = &AtlasBuffer{}
+var _ engine.BufferingEngine = &Atlas{}

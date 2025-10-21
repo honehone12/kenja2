@@ -25,7 +25,7 @@ const FUZZY_NO_CHNGE_PREFIX = 1
 const FUZZY_MAX_SINGLE_TKN = 3
 const FUZZY_MAX_KW_LIMIT = 65
 
-type AtlasClient struct {
+type atlasClient struct {
 	client     *mongo.Client
 	database   *mongo.Database
 	collection *mongo.Collection
@@ -36,7 +36,7 @@ type AtlasClient struct {
 
 func newAtlasClient(
 	m *mongo.Client, l engine.Logger,
-) (*AtlasClient, error) {
+) (*atlasClient, error) {
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
@@ -49,7 +49,7 @@ func newAtlasClient(
 	d := m.Database(db)
 	c := d.Collection(cl)
 
-	return &AtlasClient{
+	return &atlasClient{
 		client:     m,
 		database:   d,
 		collection: c,
@@ -62,7 +62,7 @@ func connect(
 	uri string,
 	maxConn uint64,
 	l engine.Logger,
-) (*AtlasClient, error) {
+) (*atlasClient, error) {
 	ops := options.Client().
 		ApplyURI(uri).
 		SetMaxPoolSize(maxConn).
@@ -80,7 +80,7 @@ func connectAws(
 	format string,
 	maxConn uint64,
 	l engine.Logger,
-) (*AtlasClient, error) {
+) (*atlasClient, error) {
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
@@ -120,13 +120,13 @@ func allITypeFilter() bson.M {
 	}
 }
 
-func (a *AtlasClient) ping(ctx context.Context) error {
+func (a *atlasClient) ping(ctx context.Context) error {
 	a.logger.Info("[ping]")
 
 	return a.client.Ping(ctx, nil)
 }
 
-func (a *AtlasClient) random(
+func (a *atlasClient) random(
 	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
 	it := q.RandomQuery()
@@ -156,7 +156,7 @@ func (a *AtlasClient) random(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *AtlasClient) unsafeTextSearch(
+func (a *atlasClient) unsafeTextSearch(
 	ctx context.Context,
 	keywords keywords.Keywords,
 	itemType documents.ItemType,
@@ -214,7 +214,7 @@ func (a *AtlasClient) unsafeTextSearch(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *AtlasClient) textSearch(
+func (a *atlasClient) textSearch(
 	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
 	kw, it, fz := q.TextSearchQuery()
@@ -256,7 +256,7 @@ func (a *AtlasClient) textSearch(
 	)
 }
 
-func (a *AtlasClient) unsafeVectorSearch(
+func (a *atlasClient) unsafeVectorSearch(
 	ctx context.Context,
 	itemType documents.ItemType,
 	srcVec bson.Binary,
@@ -296,7 +296,7 @@ func (a *AtlasClient) unsafeVectorSearch(
 	return a.collection.Aggregate(ctx, p, op)
 }
 
-func (a *AtlasClient) queryVector(
+func (a *atlasClient) queryVector(
 	ctx context.Context, id bson.ObjectID,
 ) (bson.Binary, error) {
 	var b bson.Binary
@@ -323,7 +323,7 @@ func (a *AtlasClient) queryVector(
 	return b, nil
 }
 
-func (a *AtlasClient) vectorSearch(
+func (a *atlasClient) vectorSearch(
 	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
 	id, it := q.VectorSearchQuery()
@@ -351,6 +351,6 @@ func (a *AtlasClient) vectorSearch(
 	return a.unsafeVectorSearch(ctx, it, v)
 }
 
-func (a *AtlasClient) Close(ctx context.Context) error {
+func (a *atlasClient) Close(ctx context.Context) error {
 	return a.client.Disconnect(ctx)
 }
