@@ -46,3 +46,18 @@ func BufferedQuery(
 		return nil, errors.New("invalid function id")
 	}
 }
+
+func StreamQuery(
+	engine engine.Engine,
+	ctx context.Context,
+	q *documents.SearchQuery,
+) (engine.Stream[documents.FlatDocument], error) {
+	switch q.FunctionId {
+	case documents.FID_TEXTSEARCH_STREAM:
+		return engine.TextSearchStream(ctx, q)
+	case documents.FID_VECTORSEARCH_STREAM:
+		return engine.VectorSearchStream(ctx, q)
+	default:
+		return nil, errors.New("invalid function id")
+	}
+}
