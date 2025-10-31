@@ -88,6 +88,22 @@ func (a *Atlas) VectorSeach(
 	return docs, nil
 }
 
+func (a *atlasClient) DirectVectorSearch(
+	ctx context.Context, q documents.Query,
+) ([]documents.FlatDocument, error) {
+	stream, err := a.directVectorSearch(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	var docs []documents.FlatDocument
+	if err := stream.All(ctx, &docs); err != nil {
+		return nil, err
+	}
+
+	return docs, nil
+}
+
 func (a *Atlas) TextSearchStream(
 	ctx context.Context, q documents.Query,
 ) (engine.Stream[documents.FlatDocument], error) {
@@ -103,6 +119,17 @@ func (a *Atlas) VectorSearchStream(
 	ctx context.Context, q documents.Query,
 ) (engine.Stream[documents.FlatDocument], error) {
 	stream, err := a.vectorSearch(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Stream{stream}, nil
+}
+
+func (a *Atlas) DirectVectorSearchStream(
+	ctx context.Context, q documents.Query,
+) (engine.Stream[documents.FlatDocument], error) {
+	stream, err := a.directVectorSearch(ctx, q)
 	if err != nil {
 		return nil, err
 	}
