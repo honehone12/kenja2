@@ -29,6 +29,7 @@ const (
 	FID_RANDOM
 	FID_TEXTSEARCH
 	FID_VECTORSEARCH
+	FID_DIRECT_VECTORSEARCH
 	FID_TEXTSEARCH_STREAM
 	FID_VECTORSEARCH_STREAM
 )
@@ -51,6 +52,7 @@ type Query interface {
 	RandomQuery() ItemType
 	TextSearchQuery() (string, ItemType, FuzzyKind)
 	VectorSearchQuery() (string, ItemType)
+	DirectVectorSearchQuery() (string, ItemType)
 }
 
 type SearchQuery struct {
@@ -59,6 +61,7 @@ type SearchQuery struct {
 	Id         string     `json:"id"`
 	Keywords   string     `json:"keywords"`
 	FuzzyKind  FuzzyKind  `json:"fuzzy_kind"`
+	Vector     string     `json:"vector"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {
@@ -80,4 +83,8 @@ func (q *SearchQuery) TextSearchQuery() (string, ItemType, FuzzyKind) {
 
 func (q *SearchQuery) VectorSearchQuery() (string, ItemType) {
 	return q.Id, q.ItemType
+}
+
+func (q *SearchQuery) DirectVectorSearchQuery() (string, ItemType) {
+	return q.Vector, q.ItemType
 }
