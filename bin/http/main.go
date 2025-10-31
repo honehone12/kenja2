@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"kenja2"
 	"kenja2/documents"
 	"kenja2/engine"
@@ -132,6 +133,9 @@ func animeSearchStream(e echo.Context) error {
 }
 
 func main() {
+	cors := flag.Bool("cors", false, "-cors")
+	flag.Parse()
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Logger.SetLevel(log.INFO)
@@ -145,6 +149,13 @@ func main() {
 	__engine, err = kenja2.ConnectAtlas(ENGINE_MAX_CONN, e.Logger)
 	if err != nil {
 		e.Logger.Fatal(err)
+	}
+
+	if *cors {
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: []string{"http://localhost:5173"},
+			AllowMethods: []string{http.MethodPost},
+		}))
 	}
 
 	e.POST("/anime-search", animeSearch)
