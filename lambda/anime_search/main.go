@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-const REQUEST_BODY_LIMIT = 1024
+const REQUEST_BODY_LIMIT = 2048
 const ENGINE_MAX_CONN = 1
 
 var __engine engine.Engine

@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-const ATLAS_KW_LIMIT = 240 //js accecpts 120 -> 120 * 2bytes
+const ATLAS_KW_LIMIT = 300 //at least js accecpts 120 -> 120 * 2bytes
 const ATLAS_SEARCH_LIMIT = 120
 const ATLAS_SEARCH_SIZE = 50
 const FUZZY_MAX_EDIT_TO_MATCH = 1 // 1 or 2
