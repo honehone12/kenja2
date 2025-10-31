@@ -357,7 +357,7 @@ func (a *atlasClient) directVectorSearch(
 ) (*mongo.Cursor, error) {
 	enc, it := q.DirectVectorSearchQuery()
 
-	a.logger.Infof("[direct vector] item_type=%d", it)
+	a.logger.Infof("[direct vector] vector=%s item_type=%d", enc, it)
 
 	if err := it.Ok(); err != nil {
 		return nil, err
