@@ -26,11 +26,19 @@ type Engine interface {
 		ctx context.Context,
 		q documents.Query,
 	) ([]documents.FlatDocument, error)
+	DirectVectorSearch(
+		ctx context.Context,
+		q documents.Query,
+	) ([]documents.FlatDocument, error)
 	TextSearchStream(
 		ctx context.Context,
 		q documents.Query,
 	) (Stream[documents.FlatDocument], error)
 	VectorSearchStream(
+		ctx context.Context,
+		q documents.Query,
+	) (Stream[documents.FlatDocument], error)
+	DirectVectorSearchStream(
 		ctx context.Context,
 		q documents.Query,
 	) (Stream[documents.FlatDocument], error)

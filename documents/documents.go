@@ -30,5 +30,5 @@ type SearchResult struct {
 }
 
 type ImageVector struct {
-	ImageVector bson.Vector `bson:"image_vector"`
+	ImageVector bson.Binary `bson:"image_vector"`
 }

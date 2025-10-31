@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"kenja2/documents"
@@ -24,6 +25,7 @@ const FUZZY_MAX_TRY_PER_KW = 50
 const FUZZY_NO_CHNGE_PREFIX = 1
 const FUZZY_MAX_SINGLE_TKN = 3
 const FUZZY_MAX_KW_LIMIT = 65
+const VECTOR_LEN = 768
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -315,12 +317,11 @@ func (a *atlasClient) queryVector(
 	if err != nil {
 		return b, err
 	}
-	b = v.ImageVector.Binary()
-	if b.IsZero() {
+	if v.ImageVector.IsZero() {
 		return b, errors.New("image vector is empty")
 	}
 
-	return b, nil
+	return v.ImageVector, nil
 }
 
 func (a *atlasClient) vectorSearch(
@@ -346,6 +347,38 @@ func (a *atlasClient) vectorSearch(
 	v, err := a.queryVector(ctx, oid)
 	if err != nil {
 		return nil, err
+	}
+
+	return a.unsafeVectorSearch(ctx, it, v)
+}
+
+func (a *atlasClient) directVectorSearch(
+	ctx context.Context, q documents.Query,
+) (*mongo.Cursor, error) {
+	enc, it := q.DirectVectorSearchQuery()
+
+	a.logger.Infof("[direct vector] vector=%s item_type=%d", enc, it)
+
+	if err := it.Ok(); err != nil {
+		return nil, err
+	}
+
+	dec, err := base64.URLEncoding.DecodeString(enc)
+	if err != nil {
+		return nil, err
+	}
+	if len(dec) != VECTOR_LEN {
+		return nil, errors.New("unexpected vector length")
+	}
+
+	b := make([]byte, len(dec)+2)
+	b[0] = bson.Int8Vector
+	b[1] = 0
+	copy(b[2:], dec)
+
+	v := bson.Binary{
+		Subtype: bson.TypeBinaryVector,
+		Data:    b,
 	}
 
 	return a.unsafeVectorSearch(ctx, it, v)
