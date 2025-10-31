@@ -20,7 +20,7 @@ import (
 type errorResponse = func(e echo.Context) error
 
 const ENGINE_MAX_CONN = 3
-const REQUEST_BODY_LIMIT = 1024
+const REQUEST_BODY_LIMIT = 2048
 const REQUEST_TIME_LIMIT = time.Second * 10
 
 var __engine engine.Engine
