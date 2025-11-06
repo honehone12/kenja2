@@ -26,6 +26,7 @@ const FUZZY_NO_CHNGE_PREFIX = 1
 const FUZZY_MAX_SINGLE_TKN = 3
 const FUZZY_MAX_KW_LIMIT = 65
 const VECTOR_LEN = 768
+const VECTOR_ENCODED_LEN = 1024
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -361,6 +362,10 @@ func (a *atlasClient) directVectorSearch(
 
 	if err := it.Ok(); err != nil {
 		return nil, err
+	}
+
+	if len(enc) != VECTOR_ENCODED_LEN {
+		return nil, errors.New("unexpected encoded vecter length")
 	}
 
 	dec, err := base64.URLEncoding.DecodeString(enc)
