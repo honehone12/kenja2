@@ -29,6 +29,7 @@ const FUZZY_MAX_SINGLE_TKN = 3
 const FUZZY_MAX_KW_LIMIT = 65
 const VECTOR_LEN = 768
 const VECTOR_ENCODED_LEN = 1024
+const MAX_MULTI_VECTOR = 10
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -485,7 +486,7 @@ func (a *atlasClient) multiVectorSearch(
 	}
 
 	l := len(ids)
-	if l <= 1 {
+	if l <= 1 || l > MAX_MULTI_VECTOR {
 		return nil, errors.New("invalid ids length")
 	}
 
