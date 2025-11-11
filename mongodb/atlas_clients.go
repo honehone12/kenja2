@@ -12,9 +12,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chewxy/math32"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"gorgonia.org/vecf32"
 )
 
 const ATLAS_KW_LIMIT = 300 //at least js accecpts 120 -> 120 * 2bytes
@@ -360,6 +362,44 @@ func (a *atlasClient) queryMultipleVector(
 	return vectors, nil
 }
 
+func (a *atlasClient) mixVectors(vectors []bson.Binary) (bson.Binary, error) {
+	l := len(vectors)
+	fvectors := make([][]float32, l)
+	for i := range l {
+		if len(vectors[i].Data) != VECTOR_LEN+2 {
+			return bson.Binary{Data: nil}, errors.New("invalid vector length")
+		}
+
+		f := make([]float32, VECTOR_LEN)
+		for j := range VECTOR_LEN {
+			f[j] = float32(int8(vectors[i].Data[j+2]))
+		}
+
+		fvectors[i] = f
+	}
+
+	// just get average
+	for i := 1; i < l; i++ {
+		vecf32.Add(fvectors[0], fvectors[i])
+	}
+	vecf32.ScaleInv(fvectors[0], float32(l))
+
+	// to int8
+	b := make([]byte, VECTOR_LEN+2)
+	b[0] = bson.Int8Vector
+	b[1] = 0
+	for i := range VECTOR_LEN {
+		b[i+2] = byte(int8(math32.Round(fvectors[0][i])))
+	}
+
+	v := bson.Binary{
+		Subtype: bson.TypeBinaryVector,
+		Data:    b,
+	}
+
+	return v, nil
+}
+
 func (a *atlasClient) vectorSearch(
 	ctx context.Context, q documents.Query,
 ) (*mongo.Cursor, error) {
@@ -411,7 +451,7 @@ func (a *atlasClient) directVectorSearch(
 		return nil, errors.New("unexpected vector length")
 	}
 
-	b := make([]byte, len(dec)+2)
+	b := make([]byte, VECTOR_LEN+2)
 	b[0] = bson.Int8Vector
 	b[1] = 0
 	copy(b[2:], dec)

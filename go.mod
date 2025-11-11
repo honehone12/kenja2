@@ -2,7 +2,11 @@ module kenja2
 
 go 1.24.2
 
-require go.mongodb.org/mongo-driver/v2 v2.4.0
+require (
+	github.com/chewxy/math32 v1.11.1
+	go.mongodb.org/mongo-driver/v2 v2.4.0
+	gorgonia.org/vecf32 v0.9.0
+)
 
 require (
 	github.com/golang/snappy v1.0.0 // indirect
