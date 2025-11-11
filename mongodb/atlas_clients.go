@@ -325,7 +325,7 @@ func (a *atlasClient) queryVector(
 	return v.ImageVector, nil
 }
 
-func (a *atlasClient) queryMultipleVector(
+func (a *atlasClient) queryMultiVector(
 	ctx context.Context, ids []bson.ObjectID,
 ) ([]bson.Binary, error) {
 	f := bson.D{{
@@ -364,6 +364,10 @@ func (a *atlasClient) queryMultipleVector(
 
 func (a *atlasClient) mixVectors(vectors []bson.Binary) (bson.Binary, error) {
 	l := len(vectors)
+	if l <= 1 {
+		return bson.Binary{Data: nil}, errors.New("invalid shape")
+	}
+
 	fvectors := make([][]float32, l)
 	for i := range l {
 		if len(vectors[i].Data) != VECTOR_LEN+2 {
@@ -410,14 +414,13 @@ func (a *atlasClient) vectorSearch(
 	if err := it.Ok(); err != nil {
 		return nil, err
 	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
 
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
-	}
-
-	if it == documents.ITEM_TYPE_UNSPECIFIED {
-		return nil, errors.New("vector search requires item type")
 	}
 
 	v, err := a.queryVector(ctx, oid)
@@ -437,6 +440,9 @@ func (a *atlasClient) directVectorSearch(
 
 	if err := it.Ok(); err != nil {
 		return nil, err
+	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
 	}
 
 	if len(enc) != VECTOR_ENCODED_LEN {
@@ -459,6 +465,49 @@ func (a *atlasClient) directVectorSearch(
 	v := bson.Binary{
 		Subtype: bson.TypeBinaryVector,
 		Data:    b,
+	}
+
+	return a.unsafeVectorSearch(ctx, it, v)
+}
+
+func (a *atlasClient) multiVectorSearch(
+	ctx context.Context,
+	q documents.Query,
+) (*mongo.Cursor, error) {
+	ids, it := q.MultiVectorSearchQuery()
+
+	a.logger.Infof("[multi vector] ids=%v item_type=%d", ids, it)
+
+	if err := it.Ok(); err != nil {
+		return nil, err
+	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
+
+	l := len(ids)
+	if l <= 1 {
+		return nil, errors.New("invalid ids length")
+	}
+
+	oids := make([]bson.ObjectID, l)
+	for i := range l {
+		oid, err := bson.ObjectIDFromHex(ids[i])
+		if err != nil {
+			return nil, err
+		}
+
+		oids[i] = oid
+	}
+
+	vs, err := a.queryMultiVector(ctx, oids)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := a.mixVectors(vs)
+	if err != nil {
+		return nil, err
 	}
 
 	return a.unsafeVectorSearch(ctx, it, v)
