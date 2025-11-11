@@ -302,27 +302,62 @@ func (a *atlasClient) unsafeVectorSearch(
 func (a *atlasClient) queryVector(
 	ctx context.Context, id bson.ObjectID,
 ) (bson.Binary, error) {
-	var b bson.Binary
-
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
 		"image_vector": 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
-		return b, res.Err()
+		return bson.Binary{Data: nil}, res.Err()
 	}
 
 	v := documents.ImageVector{}
 	err := res.Decode(&v)
 	if err != nil {
-		return b, err
+		return bson.Binary{Data: nil}, err
 	}
 	if v.ImageVector.IsZero() {
-		return b, errors.New("image vector is empty")
+		return bson.Binary{Data: nil}, errors.New("image vector is empty")
 	}
 
 	return v.ImageVector, nil
+}
+
+func (a *atlasClient) queryMultipleVector(
+	ctx context.Context, ids []bson.ObjectID,
+) ([]bson.Binary, error) {
+	f := bson.D{{
+		Key:   "_id",
+		Value: bson.E{Key: "$in", Value: ids},
+	}}
+	op := options.Find().SetProjection(bson.M{
+		"image_vector": 1,
+	})
+	stream, err := a.collection.Find(ctx, f, op)
+	if err != nil {
+		return nil, err
+	}
+	defer stream.Close(ctx)
+
+	vectors := []bson.Binary{}
+
+	for stream.Next(ctx) {
+		v := documents.ImageVector{}
+		if err := stream.Decode(&v); err != nil {
+			return nil, err
+		}
+
+		if v.ImageVector.IsZero() {
+			return nil, errors.New("image vector is empty")
+		}
+
+		vectors = append(vectors, v.ImageVector)
+	}
+	if err := stream.Err(); err != nil {
+		return nil, err
+	}
+
+	return vectors, nil
 }
 
 func (a *atlasClient) vectorSearch(

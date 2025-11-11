@@ -63,6 +63,7 @@ type SearchQuery struct {
 	Keywords   string     `json:"keywords"`
 	FuzzyKind  FuzzyKind  `json:"fuzzy_kind"`
 	Vector     string     `json:"vector"`
+	Ids        []string   `json:"ids"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {
