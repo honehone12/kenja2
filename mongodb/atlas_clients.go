@@ -330,7 +330,7 @@ func (a *atlasClient) queryMultiVector(
 ) ([]bson.Binary, error) {
 	f := bson.D{{
 		Key:   "_id",
-		Value: bson.E{Key: "$in", Value: ids},
+		Value: bson.M{"$in": ids},
 	}}
 	op := options.Find().SetProjection(bson.M{
 		"image_vector": 1,
@@ -341,8 +341,7 @@ func (a *atlasClient) queryMultiVector(
 	}
 	defer stream.Close(ctx)
 
-	vectors := []bson.Binary{}
-
+	vs := []bson.Binary{}
 	for stream.Next(ctx) {
 		v := documents.ImageVector{}
 		if err := stream.Decode(&v); err != nil {
@@ -353,13 +352,13 @@ func (a *atlasClient) queryMultiVector(
 			return nil, errors.New("image vector is empty")
 		}
 
-		vectors = append(vectors, v.ImageVector)
+		vs = append(vs, v.ImageVector)
 	}
 	if err := stream.Err(); err != nil {
 		return nil, err
 	}
 
-	return vectors, nil
+	return vs, nil
 }
 
 func (a *atlasClient) mixVectors(vectors []bson.Binary) (bson.Binary, error) {
