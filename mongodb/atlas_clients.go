@@ -12,9 +12,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chewxy/math32"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"gorgonia.org/vecf32"
 )
 
 const ATLAS_KW_LIMIT = 300 //at least js accecpts 120 -> 120 * 2bytes
@@ -27,6 +29,7 @@ const FUZZY_MAX_SINGLE_TKN = 3
 const FUZZY_MAX_KW_LIMIT = 65
 const VECTOR_LEN = 768
 const VECTOR_ENCODED_LEN = 1024
+const MAX_MULTI_VECTOR = 10
 
 type atlasClient struct {
 	client     *mongo.Client
@@ -302,27 +305,103 @@ func (a *atlasClient) unsafeVectorSearch(
 func (a *atlasClient) queryVector(
 	ctx context.Context, id bson.ObjectID,
 ) (bson.Binary, error) {
-	var b bson.Binary
-
 	f := bson.D{{Key: "_id", Value: id}}
 	op := options.FindOne().SetProjection(bson.M{
 		"image_vector": 1,
 	})
 	res := a.collection.FindOne(ctx, f, op)
 	if res.Err() != nil {
-		return b, res.Err()
+		return bson.Binary{Data: nil}, res.Err()
 	}
 
 	v := documents.ImageVector{}
 	err := res.Decode(&v)
 	if err != nil {
-		return b, err
+		return bson.Binary{Data: nil}, err
 	}
 	if v.ImageVector.IsZero() {
-		return b, errors.New("image vector is empty")
+		return bson.Binary{Data: nil}, errors.New("image vector is empty")
 	}
 
 	return v.ImageVector, nil
+}
+
+func (a *atlasClient) queryMultiVector(
+	ctx context.Context, ids []bson.ObjectID,
+) ([]bson.Binary, error) {
+	f := bson.D{{
+		Key:   "_id",
+		Value: bson.M{"$in": ids},
+	}}
+	op := options.Find().SetProjection(bson.M{
+		"image_vector": 1,
+	})
+	stream, err := a.collection.Find(ctx, f, op)
+	if err != nil {
+		return nil, err
+	}
+	defer stream.Close(ctx)
+
+	vs := []bson.Binary{}
+	for stream.Next(ctx) {
+		v := documents.ImageVector{}
+		if err := stream.Decode(&v); err != nil {
+			return nil, err
+		}
+
+		if v.ImageVector.IsZero() {
+			return nil, errors.New("image vector is empty")
+		}
+
+		vs = append(vs, v.ImageVector)
+	}
+	if err := stream.Err(); err != nil {
+		return nil, err
+	}
+
+	return vs, nil
+}
+
+func (a *atlasClient) mixVectors(vectors []bson.Binary) (bson.Binary, error) {
+	l := len(vectors)
+	if l <= 1 {
+		return bson.Binary{Data: nil}, errors.New("invalid shape")
+	}
+
+	fvectors := make([][]float32, l)
+	for i := range l {
+		if len(vectors[i].Data) != VECTOR_LEN+2 {
+			return bson.Binary{Data: nil}, errors.New("invalid vector length")
+		}
+
+		f := make([]float32, VECTOR_LEN)
+		for j := range VECTOR_LEN {
+			f[j] = float32(int8(vectors[i].Data[j+2]))
+		}
+
+		fvectors[i] = f
+	}
+
+	// just get average
+	for i := 1; i < l; i++ {
+		vecf32.Add(fvectors[0], fvectors[i])
+	}
+	vecf32.ScaleInv(fvectors[0], float32(l))
+
+	// to int8
+	b := make([]byte, VECTOR_LEN+2)
+	b[0] = bson.Int8Vector
+	b[1] = 0
+	for i := range VECTOR_LEN {
+		b[i+2] = byte(int8(math32.Round(fvectors[0][i])))
+	}
+
+	v := bson.Binary{
+		Subtype: bson.TypeBinaryVector,
+		Data:    b,
+	}
+
+	return v, nil
 }
 
 func (a *atlasClient) vectorSearch(
@@ -335,14 +414,13 @@ func (a *atlasClient) vectorSearch(
 	if err := it.Ok(); err != nil {
 		return nil, err
 	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
 
 	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
-	}
-
-	if it == documents.ITEM_TYPE_UNSPECIFIED {
-		return nil, errors.New("vector search requires item type")
 	}
 
 	v, err := a.queryVector(ctx, oid)
@@ -363,6 +441,9 @@ func (a *atlasClient) directVectorSearch(
 	if err := it.Ok(); err != nil {
 		return nil, err
 	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
 
 	if len(enc) != VECTOR_ENCODED_LEN {
 		return nil, errors.New("unexpected encoded vecter length")
@@ -376,7 +457,7 @@ func (a *atlasClient) directVectorSearch(
 		return nil, errors.New("unexpected vector length")
 	}
 
-	b := make([]byte, len(dec)+2)
+	b := make([]byte, VECTOR_LEN+2)
 	b[0] = bson.Int8Vector
 	b[1] = 0
 	copy(b[2:], dec)
@@ -384,6 +465,49 @@ func (a *atlasClient) directVectorSearch(
 	v := bson.Binary{
 		Subtype: bson.TypeBinaryVector,
 		Data:    b,
+	}
+
+	return a.unsafeVectorSearch(ctx, it, v)
+}
+
+func (a *atlasClient) multiVectorSearch(
+	ctx context.Context,
+	q documents.Query,
+) (*mongo.Cursor, error) {
+	ids, it := q.MultiVectorSearchQuery()
+
+	a.logger.Infof("[multi vector] ids=%v item_type=%d", ids, it)
+
+	if err := it.Ok(); err != nil {
+		return nil, err
+	}
+	if it == documents.ITEM_TYPE_UNSPECIFIED {
+		return nil, errors.New("vector search requires item type")
+	}
+
+	l := len(ids)
+	if l <= 1 || l > MAX_MULTI_VECTOR {
+		return nil, errors.New("invalid ids length")
+	}
+
+	oids := make([]bson.ObjectID, l)
+	for i := range l {
+		oid, err := bson.ObjectIDFromHex(ids[i])
+		if err != nil {
+			return nil, err
+		}
+
+		oids[i] = oid
+	}
+
+	vs, err := a.queryMultiVector(ctx, oids)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := a.mixVectors(vs)
+	if err != nil {
+		return nil, err
 	}
 
 	return a.unsafeVectorSearch(ctx, it, v)

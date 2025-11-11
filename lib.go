@@ -44,6 +44,8 @@ func BufferedQuery(
 		return engine.VectorSeach(ctx, q)
 	case documents.FID_DIRECT_VECTORSEARCH:
 		return engine.DirectVectorSearch(ctx, q)
+	case documents.FID_MULTI_VECTOR_SEARCH:
+		return engine.MultiVectorSearch(ctx, q)
 	default:
 		return nil, errors.New("invalid function id")
 	}
@@ -61,6 +63,8 @@ func StreamQuery(
 		return engine.VectorSearchStream(ctx, q)
 	case documents.FID_DIRECT_VECTORSEARCH_STREAM:
 		return engine.DirectVectorSearchStream(ctx, q)
+	case documents.FID_MULTI_VECTOR_SEARCH_STREAM:
+		return engine.MultiVectorSearchStream(ctx, q)
 	default:
 		return nil, errors.New("invalid function id")
 	}

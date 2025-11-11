@@ -30,9 +30,14 @@ const (
 	FID_TEXTSEARCH
 	FID_VECTORSEARCH
 	FID_DIRECT_VECTORSEARCH
-	FID_TEXTSEARCH_STREAM
+	FID_MULTI_VECTOR_SEARCH
+)
+
+const (
+	FID_TEXTSEARCH_STREAM = 101 + iota
 	FID_VECTORSEARCH_STREAM
 	FID_DIRECT_VECTORSEARCH_STREAM
+	FID_MULTI_VECTOR_SEARCH_STREAM
 )
 
 type FuzzyKind uint32
@@ -54,6 +59,7 @@ type Query interface {
 	TextSearchQuery() (string, ItemType, FuzzyKind)
 	VectorSearchQuery() (string, ItemType)
 	DirectVectorSearchQuery() (string, ItemType)
+	MultiVectorSearchQuery() ([]string, ItemType)
 }
 
 type SearchQuery struct {
@@ -63,6 +69,7 @@ type SearchQuery struct {
 	Keywords   string     `json:"keywords"`
 	FuzzyKind  FuzzyKind  `json:"fuzzy_kind"`
 	Vector     string     `json:"vector"`
+	Ids        []string   `json:"ids"`
 }
 
 func (q *SearchQuery) StringSize() (uint64, bool) {
@@ -88,4 +95,8 @@ func (q *SearchQuery) VectorSearchQuery() (string, ItemType) {
 
 func (q *SearchQuery) DirectVectorSearchQuery() (string, ItemType) {
 	return q.Vector, q.ItemType
+}
+
+func (q *SearchQuery) MultiVectorSearchQuery() ([]string, ItemType) {
+	return q.Ids, q.ItemType
 }
