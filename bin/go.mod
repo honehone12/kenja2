@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/chewxy/math32 v1.11.1 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -27,6 +28,7 @@ require (
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
+	gorgonia.org/vecf32 v0.9.0 // indirect
 )
 
 replace kenja2 => ./..
