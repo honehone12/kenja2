@@ -329,6 +329,10 @@ func (a *atlasClient) queryVector(
 func (a *atlasClient) queryMultiVector(
 	ctx context.Context, ids []bson.ObjectID,
 ) ([]bson.Binary, error) {
+	if len(ids) == 0 {
+		return nil, errors.New("ids are empty")
+	}
+
 	f := bson.D{{
 		Key:   "_id",
 		Value: bson.M{"$in": ids},
@@ -364,8 +368,11 @@ func (a *atlasClient) queryMultiVector(
 
 func (a *atlasClient) mixVectors(vectors []bson.Binary) (bson.Binary, error) {
 	l := len(vectors)
-	if l <= 1 {
+	switch l {
+	case 0:
 		return bson.Binary{Data: nil}, errors.New("invalid shape")
+	case 1:
+		return vectors[0], nil
 	}
 
 	fvectors := make([][]float32, l)
@@ -486,7 +493,7 @@ func (a *atlasClient) multiVectorSearch(
 	}
 
 	l := len(ids)
-	if l <= 1 || l > MAX_MULTI_VECTOR {
+	if l == 0 || l > MAX_MULTI_VECTOR {
 		return nil, errors.New("invalid ids length")
 	}
 
