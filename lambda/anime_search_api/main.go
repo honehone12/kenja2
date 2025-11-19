@@ -36,7 +36,7 @@ func handler(
 			return response.BadRequest(), nil
 		}
 
-		b, err := base64.URLEncoding.DecodeString(p)
+		b, err := base64.RawURLEncoding.DecodeString(p)
 		if err != nil {
 			logs.Warn("failed to decode base64 payload")
 			return response.BadRequest(), nil

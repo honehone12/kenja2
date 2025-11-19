@@ -456,7 +456,7 @@ func (a *atlasClient) directVectorSearch(
 		return nil, errors.New("unexpected encoded vecter length")
 	}
 
-	dec, err := base64.URLEncoding.DecodeString(enc)
+	dec, err := base64.RawURLEncoding.DecodeString(enc)
 	if err != nil {
 		return nil, err
 	}

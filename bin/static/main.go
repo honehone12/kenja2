@@ -25,7 +25,18 @@ func main() {
 		e.Logger.Fatal("env for img root is not set")
 	}
 
-	e.Static("/", imgRoot)
+	appRoot := os.Getenv("APP_ROOT")
+	if len(appRoot) == 0 {
+		e.Logger.Fatal("env for app root is not set")
+	}
+
+	e.Static("/preview", imgRoot)
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Skipper: middleware.DefaultSkipper,
+		Root:    appRoot,
+		Index:   "200.html",
+		HTML5:   true,
+	}))
 
 	if err := e.Start("localhost:8081"); err != nil {
 		e.Logger.Error(err)
