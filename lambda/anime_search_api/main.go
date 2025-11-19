@@ -30,21 +30,20 @@ func handler(
 
 	q := documents.SearchQuery{}
 	{
-		var b []byte
-		if req.IsBase64Encoded {
-			var err error
-			b, err = base64.StdEncoding.DecodeString(req.Body)
-			if err != nil {
-				logs.Warn("could not decode base64 request body")
-				return response.BadRequest(), nil
-			}
-		} else {
-			b = []byte(req.Body)
+		p, ok := req.QueryStringParameters["payload"]
+		if !ok {
+			logs.Warn("request without payload")
+			return response.BadRequest(), nil
 		}
 
-		err := json.Unmarshal(b, &q)
+		b, err := base64.URLEncoding.DecodeString(p)
 		if err != nil {
-			logs.Warn("failed to unmarshal request body")
+			logs.Warn("failed to decode base64 payload")
+			return response.BadRequest(), nil
+		}
+		err = json.Unmarshal(b, &q)
+		if err != nil {
+			logs.Warn("failed to unmarshal json payload")
 			return response.BadRequest(), nil
 		}
 	}
@@ -64,7 +63,7 @@ func handler(
 	r := documents.SearchResult{Documents: docs}
 	b, err := json.Marshal(r)
 	if err != nil {
-		logs.Error("failed to marshal request body")
+		logs.Error("failed to marshal json response body")
 		return response.BadRequest(), nil
 	}
 	return response.Json(string(b)), nil
