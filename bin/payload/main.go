@@ -18,6 +18,6 @@ func main() {
 		panic(err)
 	}
 
-	s := base64.URLEncoding.EncodeToString(b)
+	s := base64.RawURLEncoding.EncodeToString(b)
 	fmt.Println(s)
 }
