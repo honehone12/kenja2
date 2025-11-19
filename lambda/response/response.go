@@ -31,7 +31,8 @@ func Json(s string) events.APIGatewayProxyResponse {
 		StatusCode: http.StatusOK,
 		Body:       s,
 		Headers: map[string]string{
-			"Content-Type": "application/json",
+			"Content-Type":  "application/json",
+			"Cache-Control": "max-age=86400",
 		},
 	}
 }
