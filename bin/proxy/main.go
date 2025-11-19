@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"net/url"
 	"os"
 
@@ -56,6 +57,8 @@ func cacheControlMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func main() {
+	dev := flag.Bool("dev", false, "development mode")
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Logger.SetLevel(log.DEBUG)
@@ -67,6 +70,7 @@ func main() {
 	}
 
 	e.Use(securityHeaderMiddleware)
+	e.Use(cacheControlMiddleware)
 
 	a := os.Getenv("AWS_API_URL")
 	if len(a) == 0 {
@@ -85,7 +89,12 @@ func main() {
 		},
 	)
 
-	staticUrl, err := url.Parse("http://localhost:8081")
+	var staticUrl *url.URL
+	if *dev {
+		staticUrl, err = url.Parse("http://localhost:5173")
+	} else {
+		staticUrl, err = url.Parse("http://localhost:8081")
+	}
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
@@ -102,7 +111,7 @@ func main() {
 	apiGroup.Use(hostSwapMiddleware)
 	apiGroup.Use(middleware.Proxy(apiBalancer))
 	staticGroup := e.Group("/*")
-	staticGroup.Use(cacheControlMiddleware)
+
 	staticGroup.Use(middleware.Proxy(staticBalancer))
 
 	if err := e.Start("0.0.0.0:8082"); err != nil {
