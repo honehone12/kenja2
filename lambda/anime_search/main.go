@@ -16,7 +16,7 @@ const ENGINE_MAX_CONN = 1
 
 var __engine engine.Engine
 
-func Handler(
+func handler(
 	ctx context.Context,
 	q documents.SearchQuery,
 ) (documents.SearchResult, error) {
@@ -53,5 +53,5 @@ func main() {
 		logs.Panic(err)
 	}
 
-	lambda.Start(Handler)
+	lambda.Start(handler)
 }
