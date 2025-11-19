@@ -70,7 +70,6 @@ func main() {
 	}
 
 	e.Use(securityHeaderMiddleware)
-	e.Use(cacheControlMiddleware)
 
 	a := os.Getenv("AWS_API_URL")
 	if len(a) == 0 {
@@ -111,7 +110,7 @@ func main() {
 	apiGroup.Use(hostSwapMiddleware)
 	apiGroup.Use(middleware.Proxy(apiBalancer))
 	staticGroup := e.Group("/*")
-
+	staticGroup.Use(cacheControlMiddleware)
 	staticGroup.Use(middleware.Proxy(staticBalancer))
 
 	if err := e.Start("0.0.0.0:8082"); err != nil {
