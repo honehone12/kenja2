@@ -51,7 +51,11 @@ func hostSwapMiddleware(proxy *url.URL) echo.MiddlewareFunc {
 
 func cacheControlMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		ctx.Response().Header().Set("Cache-Control", "max-age=86400")
+		h := ctx.Response().Header()
+		if len(h.Get("Cache-Control")) == 0 {
+			h.Set("Cache-Control", "max-age=86400")
+		}
+
 		return next(ctx)
 	}
 }
@@ -76,7 +80,9 @@ func main() {
 	if len(imgRoot) == 0 {
 		e.Logger.Fatal("env for img root is not set")
 	}
-	e.Static("/preview", imgRoot)
+	imgGroup := e.Group("/preview")
+	imgGroup.Use(cacheControlMiddleware)
+	imgGroup.Use(middleware.Static(imgRoot))
 
 	a := os.Getenv("AWS_API_URL")
 	if len(a) == 0 {
