@@ -10,7 +10,7 @@ import (
 func main() {
 	q := documents.SearchQuery{
 		FunctionId: 3,
-		Keywords:   "ばっどがーる",
+		Keywords:   "スローループ",
 	}
 
 	b, err := json.Marshal(q)
