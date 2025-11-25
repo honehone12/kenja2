@@ -119,7 +119,6 @@ func main() {
 			},
 		)
 		devGroup := e.Group("/*")
-		devGroup.Use(cacheControlMiddleware)
 		devGroup.Use(middleware.Proxy(devBalancer))
 	} else {
 		e.Logger.Info("built app mode")
