@@ -31,8 +31,7 @@ func Json(s string) events.APIGatewayV2HTTPResponse {
 		StatusCode: http.StatusOK,
 		Body:       s,
 		Headers: map[string]string{
-			"Content-Type":  "application/json",
-			"Cache-Control": "max-age=86400",
+			"Content-Type": "application/json",
 		},
 	}
 }
