@@ -25,32 +25,29 @@ func logHeaders(h map[string]string) error {
 
 	userAgent, ok := h["user-agent"]
 	if !ok {
-		errors.Join(err, errors.New("empty user agent header"))
+		err = errors.Join(err, errors.New("empty user agent header"))
 	}
-	referer, ok := h["referer"]
-	if !ok {
-		errors.Join(err, errors.New("empty referer header"))
-	}
+	referer := h["referer"]
 	host, ok := h["host"]
 	if !ok {
-		errors.Join(err, errors.New("empty host header"))
+		err = errors.Join(err, errors.New("empty host header"))
 	}
 	origin := h["origin"]
 	forwarded, ok := h["x-forwarded-for"]
 	if !ok {
-		errors.Join(err, errors.New("empty forwarded header"))
+		err = errors.Join(err, errors.New("empty forwarded header"))
 	}
 	address, ok := h["cloudfront-viewer-address"]
 	if !ok {
-		errors.Join(err, errors.New("empty address header"))
+		err = errors.Join(err, errors.New("empty address header"))
 	}
 	asn, ok := h["cloudfront-viewer-asn"]
 	if !ok {
-		errors.Join(err, errors.New("empty asn header"))
+		err = errors.Join(err, errors.New("empty asn header"))
 	}
 	country, ok := h["cloudfront-viewer-country"]
 	if !ok {
-		errors.Join(err, errors.New("empty country header"))
+		err = errors.Join(err, errors.New("empty country header"))
 	}
 	city := h["cloudfront-viewer-city"]
 
