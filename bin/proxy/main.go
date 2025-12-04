@@ -74,8 +74,6 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 
-	e.Use(securityHeaderMiddleware)
-
 	imgRoot := os.Getenv("IMG_ROOT")
 	if len(imgRoot) == 0 {
 		e.Logger.Fatal("env for img root is not set")
@@ -119,6 +117,7 @@ func main() {
 			},
 		)
 		devGroup := e.Group("/*")
+		devGroup.Use(securityHeaderMiddleware)
 		devGroup.Use(middleware.Proxy(devBalancer))
 	} else {
 		e.Logger.Info("built app mode")
@@ -127,6 +126,7 @@ func main() {
 			e.Logger.Fatal("env for app root is not set")
 		}
 		appGroup := e.Group("/*")
+		appGroup.Use(securityHeaderMiddleware)
 		appGroup.Use(cacheControlMiddleware)
 		appGroup.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 			Skipper: middleware.DefaultSkipper,
