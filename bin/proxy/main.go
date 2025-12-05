@@ -19,21 +19,63 @@ import (
 // }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-var __securityHeaders map[string]string = map[string]string{
+var __securityHeaders = map[string]string{
 	"X-XSS-Protection":             "0",
 	"X-Frame-Options":              "DENY",
 	"X-Content-Type-Options":       "nosniff",
 	"Referrer-Policy":              "strict-origin-when-cross-origin",
-	"Cross-Origin-Opener-Policy":   "same-origin",
 	"Cross-Origin-Resource-Policy": "same-origin",
-	"Permissions-Policy":           "geolocation=(), camera=(), microphone=()",
-	"Content-Security-Policy":      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/npm/ 'wasm-unsafe-eval'; font-src 'self'; img-src 'self' data: ; worker-src 'self' blob: ; connect-src 'self' https://huggingface.co/ https://cas-bridge.xethub.hf.co/ https://cdn.jsdelivr.net/npm/; base-uri 'self'; form-action 'self'; media-src 'self'; object-src 'self'; manifest-src 'self'; child-src 'none'; frame-src https://www.youtube.com/ https://www.youtube-nocookie.com/; frame-ancestors 'none';",
+}
+
+var __appSecurityHeaders = map[string]string{
+	// "Cross-Origin-Embedder-Policy": "require-corp", // not in use, this breaks ai model loading
+	"Cross-Origin-Opener-Policy": "same-origin",
+	"Permissions-Policy":         "geolocation=(), camera=(), microphone=()",
+	"Content-Security-Policy":    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/npm/ 'wasm-unsafe-eval'; font-src 'self'; img-src 'self' data: ; worker-src 'self' blob: ; connect-src 'self' https://huggingface.co/ https://cas-bridge.xethub.hf.co/ https://cdn.jsdelivr.net/npm/; base-uri 'self'; form-action 'self'; media-src 'self'; object-src 'self'; manifest-src 'self'; child-src 'none'; frame-src https://www.youtube.com/ https://www.youtube-nocookie.com/; frame-ancestors 'none';",
+}
+
+var __imageSecurityHeaders = map[string]string{
+	"Content-Security-Policy": "frame-ancestors 'none';",
+}
+
+var __apiSecurityHeaders = map[string]string{
+	"Content-Security-Policy": "default-src 'none'; frame-ancestors 'none';",
 }
 
 func securityHeaderMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		h := ctx.Response().Header()
 		for k, v := range __securityHeaders {
+			h.Set(k, v)
+		}
+		return next(ctx)
+	}
+}
+
+func appSecurityHeaderMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		h := ctx.Response().Header()
+		for k, v := range __appSecurityHeaders {
+			h.Set(k, v)
+		}
+		return next(ctx)
+	}
+}
+
+func imageSecurityHeaderMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		h := ctx.Response().Header()
+		for k, v := range __imageSecurityHeaders {
+			h.Set(k, v)
+		}
+		return next(ctx)
+	}
+}
+
+func apiSecurityHeaderMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		h := ctx.Response().Header()
+		for k, v := range __apiSecurityHeaders {
 			h.Set(k, v)
 		}
 		return next(ctx)
@@ -74,11 +116,14 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 
+	e.Use(securityHeaderMiddleware)
+
 	imgRoot := os.Getenv("IMG_ROOT")
 	if len(imgRoot) == 0 {
 		e.Logger.Fatal("env for img root is not set")
 	}
 	imgGroup := e.Group("/preview")
+	imgGroup.Use(imageSecurityHeaderMiddleware)
 	imgGroup.Use(cacheControlMiddleware)
 	imgGroup.Use(middleware.Static(imgRoot))
 
@@ -99,6 +144,7 @@ func main() {
 		},
 	)
 	apiGroup := e.Group("/api/*")
+	apiGroup.Use(apiSecurityHeaderMiddleware)
 	apiGroup.Use(hostSwapMiddleware(awsUrl))
 	apiGroup.Use(middleware.Proxy(apiBalancer))
 
@@ -117,7 +163,7 @@ func main() {
 			},
 		)
 		devGroup := e.Group("/*")
-		devGroup.Use(securityHeaderMiddleware)
+		devGroup.Use(appSecurityHeaderMiddleware)
 		devGroup.Use(middleware.Proxy(devBalancer))
 	} else {
 		e.Logger.Info("built app mode")
@@ -126,7 +172,7 @@ func main() {
 			e.Logger.Fatal("env for app root is not set")
 		}
 		appGroup := e.Group("/*")
-		appGroup.Use(securityHeaderMiddleware)
+		appGroup.Use(appSecurityHeaderMiddleware)
 		appGroup.Use(cacheControlMiddleware)
 		appGroup.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 			Skipper: middleware.DefaultSkipper,
