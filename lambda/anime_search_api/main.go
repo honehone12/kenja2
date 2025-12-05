@@ -17,6 +17,7 @@ import (
 
 const REQUEST_BODY_LIMIT = 2048
 const ENGINE_MAX_CONN = 1
+const KENJA_CDN_CODE = "x3BIdQp4loY9Hy47AtNiypA62VN3nwXv"
 
 var __engine engine.Engine
 
@@ -50,9 +51,13 @@ func logHeaders(h map[string]string) error {
 		err = errors.Join(err, errors.New("empty country header"))
 	}
 	city := h["cloudfront-viewer-city"]
+	kCode, ok := h["x-kenja-cdn-code"]
+	if !ok || kCode != KENJA_CDN_CODE {
+		err = errors.New("wrong k code")
+	}
 
 	logs.Infof(
-		"user-agent=%s referer=%s host=%s origin=%s forwarded=%s address=%s asn=%s country=%s city=%s",
+		"user-agent=%s referer=%s host=%s origin=%s forwarded=%s address=%s asn=%s country=%s city=%s k-code=%s",
 		userAgent,
 		referer,
 		host,
@@ -62,6 +67,7 @@ func logHeaders(h map[string]string) error {
 		asn,
 		country,
 		city,
+		kCode,
 	)
 
 	return err
