@@ -10,6 +10,7 @@ import (
 	"kenja2/engine"
 	"kenja2/lambda/logs"
 	"kenja2/lambda/response"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,8 +18,8 @@ import (
 
 const REQUEST_BODY_LIMIT = 2048
 const ENGINE_MAX_CONN = 1
-const KENJA_CDN_CODE = "x3BIdQp4loY9Hy47AtNiypA62VN3nwXv"
 
+var __kenjaCdnCode string
 var __engine engine.Engine
 
 func logHeaders(h map[string]string) error {
@@ -52,7 +53,7 @@ func logHeaders(h map[string]string) error {
 	}
 	city := h["cloudfront-viewer-city"]
 	kCode, ok := h["x-kenja-cdn-code"]
-	if !ok || kCode != KENJA_CDN_CODE {
+	if !ok || kCode != __kenjaCdnCode {
 		err = errors.New("wrong k code")
 	}
 
@@ -134,6 +135,11 @@ func handler(
 func main() {
 	logs.FmtDefault()
 	logs.SetLevel(logs.INFO)
+
+	__kenjaCdnCode = os.Getenv("KENJA_CDN_CODE")
+	if len(__kenjaCdnCode) == 0 {
+		logs.Panic("env for kenja cdn code is not set")
+	}
 
 	var err error
 	__engine, err = kenja2.ConnectAtlasAws(ENGINE_MAX_CONN, logs.Logger())
