@@ -81,7 +81,12 @@ func handler(
 	if __engine == nil {
 		logs.Error("engine is not initialized")
 		return response.InternalError(), nil
+	} else if len(__kenjaCdnCode) == 0 {
+		logs.Error("k code is not set")
+		return response.InternalError(), nil
 	}
+
+	logs.Infof("path=%s query=%s", req.RawPath, req.RawQueryString)
 
 	if err := logHeaders(req.Headers); err != nil {
 		logs.Warn(err)
