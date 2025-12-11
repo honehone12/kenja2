@@ -2,8 +2,10 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"kenja2/documents"
 	"kenja2/engine"
+	"os"
 )
 
 type Atlas struct {
@@ -11,10 +13,18 @@ type Atlas struct {
 }
 
 func Connect(
-	uri string,
 	maxConn uint64,
 	logger engine.Logger,
 ) (*Atlas, error) {
+	// don't inject other than env
+	// to prevent exposing sensitive info
+	// just write within module for testing
+
+	uri := os.Getenv("SEARCHENGINE_URI")
+	if len(uri) == 0 {
+		return nil, errors.New("env for search engine uri is not set")
+	}
+
 	atlasClient, err := connect(uri, maxConn, logger)
 	if err != nil {
 		return nil, err
@@ -24,11 +34,19 @@ func Connect(
 }
 
 func ConnectAws(
-	uri string,
 	maxConn uint64,
 	logger engine.Logger,
 ) (*Atlas, error) {
-	atlasClient, err := connectAws(uri, maxConn, logger)
+	// don't inject other than env
+	// to prevent exposing sensitive info
+	// just write within module for testing
+
+	format := os.Getenv("SEARCHENGINE_URI")
+	if len(format) == 0 {
+		return nil, errors.New("env for search engine uri is not set")
+	}
+
+	atlasClient, err := connectAws(format, maxConn, logger)
 	if err != nil {
 		return nil, err
 	}

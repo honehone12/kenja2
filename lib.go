@@ -7,25 +7,14 @@ import (
 	"kenja2/documents"
 	"kenja2/engine"
 	"kenja2/mongodb"
-	"os"
 )
 
 func ConnectAtlas(maxConn uint64, logger engine.Logger) (engine.Engine, error) {
-	uri := os.Getenv("SEARCHENGINE_URI")
-	if len(uri) == 0 {
-		return nil, errors.New("env for search engine uri is not set")
-	}
-
-	return mongodb.Connect(uri, maxConn, logger)
+	return mongodb.Connect(maxConn, logger)
 }
 
 func ConnectAtlasAws(maxConn uint64, logger engine.Logger) (engine.Engine, error) {
-	uri := os.Getenv("SEARCHENGINE_URI")
-	if len(uri) == 0 {
-		return nil, errors.New("env for search engine uri is not set")
-	}
-
-	return mongodb.ConnectAws(uri, maxConn, logger)
+	return mongodb.ConnectAws(maxConn, logger)
 }
 
 func BufferedQuery(

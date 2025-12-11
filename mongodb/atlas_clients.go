@@ -43,6 +43,10 @@ type atlasClient struct {
 func newAtlasClient(
 	m *mongo.Client, l engine.Logger,
 ) (*atlasClient, error) {
+	// don't inject other than env
+	// to prevent exposing sensitive info
+	// just write within module for testing
+
 	db := os.Getenv("MONGO_DATABASE")
 	if len(db) == 0 {
 		return nil, errors.New("env for db name is not set")
@@ -87,6 +91,10 @@ func connectAws(
 	maxConn uint64,
 	l engine.Logger,
 ) (*atlasClient, error) {
+	// don't inject other than env
+	// to prevent exposing sensitive info
+	// just write within module for testing
+
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	if len(accessKey) == 0 {
 		return nil, errors.New("env for aws access key id is not set")
