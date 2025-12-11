@@ -143,7 +143,7 @@ func main() {
 			},
 		},
 	)
-	apiGroup := e.Group("/api/*")
+	apiGroup := e.Group("/api")
 	apiGroup.Use(apiSecurityHeaderMiddleware)
 	apiGroup.Use(hostSwapMiddleware(awsUrl))
 	apiGroup.Use(middleware.Proxy(apiBalancer))
